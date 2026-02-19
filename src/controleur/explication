@@ -1,0 +1,5 @@
+
+
+Ce paquetage contient les classes responsables de la gestion des interactions utilisateur : 
+elles récupèrent les données issues de l’interface graphique, les transmettent aux modèles correspondants,
+déclenchent la logique métier et déterminent la vue à afficher.

@@ -1,0 +1,4 @@
+
+
+Le paquetage "vue" regroupe les classes responsables de l’affichage et de l’interaction avec l’utilisateur.
+Il présente les données issues du modèle sans contenir de logique métier, et transmet les actions utilisateur au contrôleur.

@@ -1,0 +1,4 @@
+
+
+Le paquetage Modèle regroupe les classes représentant les entités métiers ainsi que les règles de gestion associées. 
+Il assure la manipulation, la validation et la persistance des données, tout en restant indépendant de l’interface utilisateur.
