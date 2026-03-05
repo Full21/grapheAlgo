@@ -1,4 +1,4 @@
-package projetGraphe;
+package modele;
 
 public abstract class Sommet<T> {
 	

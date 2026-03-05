@@ -1,4 +1,4 @@
-package projetGraphe;
+package modele;
 
 import java.util.List;
 
