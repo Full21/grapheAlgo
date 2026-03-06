@@ -11,7 +11,8 @@ public interface IGraphe<T> {
   
     void ajouterArc(Sommet<T> sommet1, Sommet<T> sommet2, double poids);
     void ajouterArc(Sommet<T> sommet1, Sommet<T> sommet2);
-    void supprimerArc(Sommet<T> sommet);
+    void supprimerArcs(Sommet<T> sommet);
+    void supprimerArc(Sommet<T> sommet1, Sommet<T> sommet2);
 
     List<T> getVoisins(T sommet);
     int getOrdre();

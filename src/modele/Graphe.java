@@ -44,21 +44,23 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	
 	@Override
 	public void supprimerSommet(T sommet) {		
-		Sommet<T> sommetSupprimer = new Sommet<T>(sommet);
-		if(sommets.contains(sommetSupprimer)) {
-			sommets.remove(sommetSupprimer);
-			supprimerArc(sommetSupprimer);
+
+		for(int i = this.sommets.size() - 1; i >= 0; i--) {
+			Sommet<T> sommetCourant = sommets.get(i);
+			if(sommetCourant.donnee.equals(sommet)) {
+				this.sommets.remove(i);
+				this.matriceAdjacence[0][0]--;
+			}
 		}
-		this.matriceAdjacence[0][0]--;
 		construireFsEtAps();
 	}
 	
 	@Override
-	public void supprimerArc(Sommet<T> sommet) {			
+	public void supprimerArcs(Sommet<T> sommet) {			
 		for(int i = this.arcs.size() - 1; i >= 0; i--) {	
 			Arc<T> arc = arcs.get(i);
 			if(arc.source.equals(sommet) || arc.destination.equals(sommet)) {
-				arcs.remove(arc);
+				arcs.remove(i);
 				this.matriceAdjacence[0][1]--;
 				this.matriceAdjacence[arc.source.id][arc.destination.id] = 0;				
 			}
@@ -66,6 +68,18 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		construireFsEtAps();
 	}
 	
+	@Override
+	public void supprimerArc(Sommet<T> sommet1, Sommet<T> sommet2) {			
+		for(int i = this.arcs.size() - 1; i >= 0; i--) {	
+			Arc<T> arc = arcs.get(i);
+			if(arc.source.equals(sommet1) && arc.destination.equals(sommet2)) {
+				arcs.remove(i);
+				this.matriceAdjacence[0][1]--;
+				this.matriceAdjacence[arc.source.id][arc.destination.id] = 0;				
+			}
+		}
+		construireFsEtAps();
+	}
 	
 	
 //	@Override
