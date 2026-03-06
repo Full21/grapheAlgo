@@ -9,13 +9,14 @@ public interface IGraphe<T> {
     void supprimerSommet(T donnee);
 
   
-    void ajouterArc(T source, T destination);
-    void supprimerArc(T source, T destination);
+    void ajouterArc(T donnee1, T donnee2);    
+    void supprimerArc(T donnee1, T donnee2);
+    void supprimerArcs(T donnee1);  
 
     List<T> getVoisins(T sommet);
     int getOrdre();
 
     int[][] getMatriceAdjacence();
-    int[]   getFS();
-    int[]   getAPS();
+    int[]   getFs();
+    int[]   getAps();
 }
