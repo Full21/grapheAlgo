@@ -9,37 +9,69 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	protected List<Arc<T>> arcs;
 	protected boolean estOriente;
 	protected boolean estPondere;
+	protected int[] fs, aps;
+	protected int[][] matriceAdjacence;
 	
+	
+	
+	public Graphe(int nbSommets){
+		this.sommets = new ArrayList<Sommet<T>>();
+		this.arcs = new ArrayList<Arc<T>>();
+		this.matriceAdjacence = new int[nbSommets + 1][nbSommets + 1];
+	}
+
 	@Override
 	public void ajouterSommet(T sommet) {
-		sommets.add(sommet);
+		sommets.add(new Sommet<T>(sommet));
+		this.matriceAdjacence[0][0]++;
+		construireFsEtAps();
 	}
-	
-	@Override
-	public void ajouterArc(T sommet1, T sommet2) {
-		Arc arc = new Arc<T>(sommet1, sommet2);
-		arcs.add(arc);
-	}
-	
-	@Override
-	public void supprimerSommet(T sommet) {
-		if(sommets.contains(sommet)) {
-			sommets.remove(sommet);
-		}
-	}
-	
-	@Override
-	public void supprimerArc(T sommet1, T sommet2) {
-		Arc arc = new Arc<T>(sommet1, sommet2);
-		if(arcs.contains(arc)) {
-			arcs.remove(arc);
-		}
-	}
-	
-	@Override
-	public List<T> getVoisins(T sommet) {
 		
+	
+	@Override
+	public void ajouterArc(Sommet<T> sommet1, Sommet<T> sommet2, double poids) {		
+		Arc<T> arc = new Arc<T>(sommet1, sommet2, poids);
+		arcs.add(arc);
+		this.matriceAdjacence[0][1]++;
+		this.matriceAdjacence[sommet1.getId()][sommet2.getId()] = 1;
+		construireFsEtAps();
 	}
+	
+	@Override
+	public void ajouterArc(Sommet<T> sommet1, Sommet<T> sommet2) {		
+		ajouterArc(sommet1, sommet2, 0);
+	}
+	
+	@Override
+	public void supprimerSommet(T sommet) {		
+		Sommet<T> sommetSupprimer = new Sommet<T>(sommet);
+		if(sommets.contains(sommetSupprimer)) {
+			sommets.remove(sommetSupprimer);
+			supprimerArc(sommetSupprimer);
+		}
+		this.matriceAdjacence[0][0]--;
+		construireFsEtAps();
+	}
+	
+	@Override
+	public void supprimerArc(Sommet<T> sommet) {			
+		for(int i = this.arcs.size() - 1; i >= 0; i--) {	
+			Arc<T> arc = arcs.get(i);
+			if(arc.source.equals(sommet) || arc.destination.equals(sommet)) {
+				arcs.remove(arc);
+				this.matriceAdjacence[0][1]--;
+				this.matriceAdjacence[arc.source.id][arc.destination.id] = 0;				
+			}
+		}
+		construireFsEtAps();
+	}
+	
+	
+	
+//	@Override
+//	public List<T> getVoisins(T sommet) {
+//		
+//	}
 	
 	@Override
 	public int getOrdre() {
@@ -48,17 +80,17 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	
 	@Override
 	public int[][] getMatriceAdjacence() {
-		
+		return this.matriceAdjacence;
 	}
 	
 	@Override
 	public int[] getFs() {
-		
+		return this.fs;
 	}
 	
 	@Override
-	public int[] getAPS() {
-		
+	public int[] getAps() {
+		return this.aps;
 	}
 	
 	@Override
@@ -76,23 +108,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		
 	}
 	
-	/*private int [] fs, aps;
-	private int [][] matriceAdjacence, matriceDistance;
-	
-	public Graphe(int [] fs, int [] aps) {
-		this.fs = fs;
-		this.aps = aps;
-		initialiserMatriceAdjacence();
-		initialiserMatriceDistance();
-	}
-	
-	public Graphe(int [][] matriceAdjacence) {
-		this.matriceAdjacence = matriceAdjacence;
-		initialiserFsEtAps();
-		initialiserMatriceDistance();
-	}
-	
-	private void initialiserFsEtAps() {		
+	private void construireFsEtAps() {		
 		int nbSom = this.matriceAdjacence[0][0];
 	    int nbArc = this.matriceAdjacence[0][1];
 		this.fs = new int[nbSom + nbArc + 1];	
@@ -113,24 +129,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	    fs[0] = k;
 	}
 	
-	private void initialiserMatriceAdjacence() {
-		int nbSommets = aps[0];
-	    int nbArcs = fs[0] - aps[0];
-	    
-	    this.matriceAdjacence = new int[nbSommets + 1][nbSommets + 1];
-	    this.matriceAdjacence[0][0] = nbSommets;
-	    this.matriceAdjacence[0][1] = nbArcs;
-	    for (int i = 1; i <= nbSommets; i++) {
-	        int j = aps[i];
-
-	        while (fs[j] != 0) {
-	            int k = fs[j];
-	            this.matriceAdjacence[i][k] = 1;
-	            j++;
-	        }
-	    }
-	    
-	}
+	/*	
 	
     private void initialiserMatriceDistance() {
     	int nbSom = this.aps[0];
