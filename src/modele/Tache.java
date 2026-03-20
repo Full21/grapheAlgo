@@ -11,7 +11,7 @@ public class Tache {
 	private int marge;
 	
 	public boolean isCritique() {
-		return false; // Temporaire
+		return dateTot == dateTard;
 	}
 	
 	public int getMarge() {

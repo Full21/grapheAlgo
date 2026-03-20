@@ -1,25 +1,32 @@
 package modele;
 
-public class GrapheNonOrientePondere<T> extends GrapheNonOriente<T> implements IPondere{
+import java.util.List;
 
-	@Override
+public class GrapheNonOrientePondere<T> /* extends GrapheNonOriente<T> implements IPondere */{
+
+	private double[][] matricePoids;
+	
+	//@Override
 	public void afficher() {
 		
 	}
 	
-	@Override
-	public double getPoids(Sommet<T> sommet1, Sommet<T> sommet2) {
-		
+	//@Override		
+	public double getPoids(int sommet1, int sommet2) {
+		return this.matricePoids[sommet1][sommet2];
 	}
 	
-	@Override 
-	public void setPoids(Sommet<T> sommet1, Sommet<T> sommet2, double poids) {
-		
+	//@Override 
+	public void setPoids(int sommet1, int sommet2, double poids) {
+		this.matricePoids[sommet1][sommet2] = poids;
 	}
 	
-	@Override
-	public void double[][] getMatricePoids(){
-		
+	//@Override
+	public double[][] getMatricePoids(){
+		return this.matricePoids;
 	}
 	
+	 /* public List<Arc<T>> kruskal() {
+		// Attente de la méthode du prof 
+	 } */
 }
