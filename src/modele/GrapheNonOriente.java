@@ -16,10 +16,12 @@ public class GrapheNonOriente<T> extends Graphe<T> {
 	private int dfsConnexe(int s, boolean[] visite, int nbVisites) {
 		visite[s] = true; 
 		nbVisites++;
+		
 		Sommet<T> sommet = trouverSommet(s);
-		for(int t: getVoisins(sommet)) {
-			if(!visite[t]) 
-				nbVisites = dfsConnexe(t, visite, nbVisites);
+		for(Sommet<T> voisin : getVoisins(sommet.getDonnee())) {
+			int idVoisin = voisin.getId();
+			if(!visite[idVoisin]) 
+				nbVisites = dfsConnexe(idVoisin, visite, nbVisites);
 			
 		}
 		return nbVisites;
