@@ -310,56 +310,6 @@ public class GrapheNonOriente<T> extends Graphe<T> {
         prem[i]  = prem[j];
     }
 
-    /**
-     * kruskal — construit l'arbre recouvrant minimal et le stocke dans
-     * arbreCouvrant (liste des arêtes sélectionnées).
-     *
-     * Traduit du cours (Graphe.pdf page 12) :
-     *
-     *   Initialement : cfc[s]=s, prem[s]=s, pilch[s]=0
-     *   Pour chaque arête (s,t) dans l'ordre trié :
-     *     Si cfc[s] != cfc[t] :
-     *       Ajouter (s,t) à t
-     *       fusionner(cfc[s], cfc[t], prem, pilch, cfc)
-     *     Si n-1 arêtes ajoutées : stopper
-     */
-    public void kruskal() {
-        arbreCouvrant.clear();
-
-        int n = sommets.size();
-        // Tableaux 1-indexés (indice 0 inutilisé, comme dans le cours C++)
-        int[] prem  = new int[n + 1];
-        int[] pilch = new int[n + 1];
-        int[] cfc   = new int[n + 1];
-
-        // Initialisation : chaque sommet est sa propre composante
-        for (int s = 1; s <= n; s++) {
-            cfc[s]   = s;
-            prem[s]  = s;
-            pilch[s] = 0;
-        }
-
-        // Trier les arêtes
-        trierArcs();
-
-        int nbAretesAjoutees = 0;
-
-        for (Arc<T> arc : arcs) {
-            if (nbAretesAjoutees == n - 1) break;
-
-            // Indices 1-indexés des deux extrémités
-            int idxS = sommets.indexOf(arc.getDepart())   + 1;
-            int idxT = sommets.indexOf(arc.getArrivee())  + 1;
-
-            // L'arête est acceptée si les deux sommets sont dans des composantes différentes
-            if (cfc[idxS] != cfc[idxT]) {
-                arbreCouvrant.add(arc);
-                fusionner(cfc[idxS], cfc[idxT], prem, pilch, cfc);
-                nbAretesAjoutees++;
-            }
-        }
-    }
-
 
     // -------------------------------------------------------------------------
     // afficherArbreCouvrant — affiche l'ACM calculé par kruskal()
