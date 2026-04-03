@@ -270,6 +270,15 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	
 	public abstract void afficher(); 
 	
+	public Sommet<T> trouverSommet(int id) {
+		for(Sommet<T> sommet : this.sommets) {
+			if(sommet.getId() == id) {
+				return sommet;
+			}
+		}
+		return null;
+	}
+	
 	/*	
 	
     private void initialiserMatriceDistance() {
