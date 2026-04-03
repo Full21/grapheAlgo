@@ -13,7 +13,7 @@ public interface IGraphe<T> {
     void supprimerArc(T donnee1, T donnee2);
     void supprimerArcs(T donnee1);  
 
-    List<T> getVoisins(T sommet);
+    List<Sommet<T>> getVoisins(T sommet);
     int getOrdre();
 
     int[][] getMatriceAdjacence();
