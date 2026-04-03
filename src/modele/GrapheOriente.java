@@ -6,17 +6,13 @@ import java.util.ArrayList;
 
 public class GrapheOriente<T> extends Graphe<T> {
 
-    protected List<Sommet<T>> sommets;
-    protected List<Arc<T>>    arcs;
-    protected List<List<T>>   composantesCC;
+    protected List<List<T>> composantesCC;
 
     // tarjanCfc reste attribut car grapheReduit() en a besoin après tarjan()
     private int[] tarjanCfc;
 
     public GrapheOriente(int nbSommets) {
         super(nbSommets);
-        this.sommets       = new ArrayList<>();
-        this.arcs          = new ArrayList<>();
         this.composantesCC = new ArrayList<>();
     }
 
