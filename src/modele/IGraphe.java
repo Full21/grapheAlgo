@@ -9,7 +9,8 @@ public interface IGraphe<T> {
     void supprimerSommet(T donnee);
 
   
-    void ajouterArc(T donnee1, T donnee2);    
+    void ajouterArc(T donnee1, T donnee2);     
+	public void ajouterArc(T donnee1, T donnee2, double poids);
     void supprimerArc(T donnee1, T donnee2);
     void supprimerArcs(T donnee1);  
 
