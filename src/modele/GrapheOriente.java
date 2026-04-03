@@ -6,20 +6,19 @@ import java.util.ArrayList;
 
 public class GrapheOriente<T> extends Graphe<T> {
 
-    protected List<Sommet<T>> sommets;
-    protected List<Arc<T>>    arcs;
-    protected List<List<T>>   composantesCC; // pour Tarjan
+    protected List<List<T>> composantesCC;
+
+    // tarjanCfc reste attribut car grapheReduit() en a besoin après tarjan()
+    private int[] tarjanCfc;
 
     public GrapheOriente(int nbSommets) {
         super(nbSommets);
-        this.sommets       = new ArrayList<>();
-        this.arcs          = new ArrayList<>();
         this.composantesCC = new ArrayList<>();
     }
 
 
     // =========================================================================
-    // afficher — liste d'adjacence (successeurs de chaque sommet)
+    // afficher — liste d'adjacence
     // =========================================================================
     @Override
     public void afficher() {
@@ -49,40 +48,19 @@ public class GrapheOriente<T> extends Graphe<T> {
 
     // =========================================================================
     // ALGORITHME DE TARJAN — Composantes Fortement Connexes
-    //
-    // Traduit exactement depuis le cours (Graphe.pdf page 1) :
-    //   void traversee(int s)      — DFS récursif avec numérotation et ro[]
-    //   void fortconnexe(...)      — appel global et initialisation
-    //
-    // Structures :
-    //   num[]    : numéro d'ordre DFS (0 = non visité)
-    //   ro[]     : plus petit num[] atteignable depuis s
-    //   tarjPile : pile de Tarjan
-    //   entarj[] : booléen — sommet dans la pile
-    //   tarjanP  : compteur DFS
-    //   tarjanK  : compteur CFC
-    //   tarjanCfc[]: numéro de CFC de chaque sommet
+    // Traduit depuis le cours (Graphe.pdf page 1)
     // =========================================================================
 
-    private int[]     tarjanNum;
-    private int[]     tarjanRo;
-    private int[]     tarjanPile;
-    private boolean[] tarjanEntarj;
-    private int[]     tarjanCfc;
-    private int       tarjanP;
-    private int       tarjanK;
-    private int       tarjanTop;
-
-    private void empilerTarj(int s) {
-        tarjanPile[++tarjanTop] = s;
+    private void empilerTarj(int s, int[] tarjanPile, int[] tarjanTop) {
+        tarjanPile[++tarjanTop[0]] = s;
     }
 
-    private int depilerTarj() {
-        return tarjanPile[tarjanTop--];
+    private int depilerTarj(int[] tarjanPile, int[] tarjanTop) {
+        return tarjanPile[tarjanTop[0]--];
     }
 
     /**
-     * traverseeTarjan — DFS de Tarjan sur le sommet s (0-indexé).
+     * traverseeTarjan — DFS de Tarjan sur le sommet s.
      *
      * Traduit fidèlement depuis le cours :
      *   p++; num[s]=p; ro[s]=p;
@@ -90,21 +68,29 @@ public class GrapheOriente<T> extends Graphe<T> {
      *   for (successeurs t de s)
      *     if (num[t]==0) { traversee(t); if (ro[t]<ro[s]) ro[s]=ro[t]; }  // Z1
      *     else { if (num[t]<ro[s] && entarj[t]) ro[s]=num[t]; }           // Z2
-     *   if (ro[s]==num[s])   // s est racine d'une CFC
+     *   if (ro[s]==num[s])
      *   { k++; do { u=depiler; entarj[u]=false; cfc[u]=k; } while(u!=s); }
      */
-    private void traverseeTarjan(int s) {
-        tarjanP++;
-        tarjanNum[s]    = tarjanP;
-        tarjanRo[s]     = tarjanP;
-        empilerTarj(s);
+    private void traverseeTarjan(int s,
+                                  int[]     tarjanNum,
+                                  int[]     tarjanRo,
+                                  int[]     tarjanPile,
+                                  boolean[] tarjanEntarj,
+                                  int[]     tarjanP,
+                                  int[]     tarjanK,
+                                  int[]     tarjanTop) {
+        tarjanP[0]++;
+        tarjanNum[s]    = tarjanP[0];
+        tarjanRo[s]     = tarjanP[0];
+        empilerTarj(s, tarjanPile, tarjanTop);
         tarjanEntarj[s] = true;
 
         for (Arc<T> arc : arcs) {
             if (sommets.indexOf(arc.source) == s) {
                 int t = sommets.indexOf(arc.destination);
                 if (tarjanNum[t] == 0) {
-                    traverseeTarjan(t);
+                    traverseeTarjan(t, tarjanNum, tarjanRo, tarjanPile,
+                                    tarjanEntarj, tarjanP, tarjanK, tarjanTop);
                     if (tarjanRo[t] < tarjanRo[s]) tarjanRo[s] = tarjanRo[t]; // Z1
                 } else {
                     if (tarjanNum[t] < tarjanRo[s] && tarjanEntarj[t])         // Z2
@@ -115,13 +101,13 @@ public class GrapheOriente<T> extends Graphe<T> {
 
         // s est racine d'une CFC
         if (tarjanRo[s] == tarjanNum[s]) {
-            tarjanK++;
+            tarjanK[0]++;
             List<T> cfc = new ArrayList<>();
             int u;
             do {
-                u = depilerTarj();
+                u = depilerTarj(tarjanPile, tarjanTop);
                 tarjanEntarj[u] = false;
-                tarjanCfc[u]    = tarjanK;
+                tarjanCfc[u]    = tarjanK[0];
                 cfc.add(sommets.get(u).getDonnee());
             } while (u != s);
             composantesCC.add(cfc);
@@ -135,15 +121,15 @@ public class GrapheOriente<T> extends Graphe<T> {
     public List<List<T>> tarjan() {
         int n = sommets.size();
         composantesCC.clear();
+        tarjanCfc = new int[n];
 
-        tarjanNum    = new int[n];
-        tarjanRo     = new int[n];
-        tarjanPile   = new int[n + 1];
-        tarjanEntarj = new boolean[n];
-        tarjanCfc    = new int[n];
-        tarjanP      = 0;
-        tarjanK      = 0;
-        tarjanTop    = 0;
+        int[]     tarjanNum    = new int[n];
+        int[]     tarjanRo     = new int[n];
+        int[]     tarjanPile   = new int[n + 1];
+        boolean[] tarjanEntarj = new boolean[n];
+        int[]     tarjanP      = {0};
+        int[]     tarjanK      = {0};
+        int[]     tarjanTop    = {0};
 
         for (int i = 0; i < n; i++) {
             tarjanNum[i]    = 0;
@@ -152,7 +138,9 @@ public class GrapheOriente<T> extends Graphe<T> {
         }
 
         for (int s = 0; s < n; s++) {
-            if (tarjanNum[s] == 0) traverseeTarjan(s);
+            if (tarjanNum[s] == 0)
+                traverseeTarjan(s, tarjanNum, tarjanRo, tarjanPile,
+                                tarjanEntarj, tarjanP, tarjanK, tarjanTop);
         }
 
         return composantesCC;
@@ -161,10 +149,7 @@ public class GrapheOriente<T> extends Graphe<T> {
 
     // =========================================================================
     // grapheReduit — construit le graphe réduit R(G) à partir des CFC
-    //
-    // Traduit depuis graph_reduit() du cours (Graphe.pdf page 1) :
-    //   Sommets du réduit = les CFC
-    //   Arc (A,B) ssi arc (s,t) dans G avec s∈A, t∈B et A≠B
+    // Traduit depuis graph_reduit() du cours (Graphe.pdf page 1)
     // =========================================================================
     public GrapheOriente<T> grapheReduit() {
         if (composantesCC.isEmpty()) tarjan();
@@ -201,10 +186,7 @@ public class GrapheOriente<T> extends Graphe<T> {
 
     // =========================================================================
     // calculerRangs — via demi-degrés intérieurs
-    //
-    // Traduit depuis l'algorithme du rang du cours :
-    //   ddi[s] = nombre de prédécesseurs
-    //   Rang 0 : ddi[s] == 0 → éliminer, décrémenter successeurs, rang++
+    // Traduit depuis l'algorithme du rang du cours
     // =========================================================================
     public void calculerRangs() {
         int n = sommets.size();
@@ -242,9 +224,7 @@ public class GrapheOriente<T> extends Graphe<T> {
 
     // =========================================================================
     // calculerDistances — BFS depuis chaque sommet
-    //
-    // Traduit depuis desc_large1() du cours (Graphe.pdf pages 3-4) :
-    //   dist[r]=0 ; autres = -1 ; BFS niveau par niveau
+    // Traduit depuis desc_large1() du cours (Graphe.pdf pages 3-4)
     // =========================================================================
     public int[][] calculerDistances() {
         int n = sommets.size();
@@ -280,7 +260,6 @@ public class GrapheOriente<T> extends Graphe<T> {
 
     // =========================================================================
     // getBases — sommets sans prédécesseur (ddi == 0)
-    //
     // Traduit depuis base_Greduit() du cours (Graphe.pdf page 1)
     // =========================================================================
     public List<T> getBases() {
