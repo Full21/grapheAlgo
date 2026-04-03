@@ -3,13 +3,21 @@ package modele;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Ordonnancement {
+public class Ordonnancement extends GrapheOriente<Tache>{
 	private List<Tache> taches = new ArrayList<Tache>();
-	private GrapheOriente<Tache> graphe;
 
+	public Ordonnancement(int nbtaches) {
+		super(nbtaches);
+	}
+	
+	public Ordonnancement() {
+		super(100);
+	}
+	
+	
 	private void dfsCheminCritique(Tache courante, ArrayList<Tache> courant, ArrayList<ArrayList<Tache>> resultats) {
 		boolean aSuccesseur = false;
-		for (Sommet<Tache> sommetvoisin : graphe.getVoisins(courante)) {
+		for (Sommet<Tache> sommetvoisin :getVoisins(courante)) {
 
 			Tache voisin = sommetvoisin.getDonnee();
 
@@ -25,24 +33,16 @@ public class Ordonnancement {
 		}
 
 	}
+	
+    @Override
+	public void ajouterSommet(Tache t) {
+    	     taches.add(t);
+        super.ajouterSommet(t);
+      
 
-	public Ordonnancement() {
-		this.taches = new ArrayList<>();
-		this.graphe = new GrapheOriente<>();
-	}
-
-	public void ajouterTache(String nom, int duree, int[] antecedents) {
-		int numero = taches.size() + 1;
-		Tache t = new Tache(numero, nom, duree, antecedents);
-		taches.add(t);
-
-		Sommet<Tache> s = new Sommet<>(t);
-		graphe.ajouterSommet(t);
-
-		for (int ant : antecedents) {
+		for (int ant : t.getAntecedents()) {
 			Tache antecedent = taches.get(ant - 1);
-			Arc<Tache> arc = new Arc<>(antecedent, t, antecedent.getDuree());
-			graphe.ajouterArc(antecedent, t);
+			ajouterArc(antecedent, t);
 		}
 	}
 
@@ -50,11 +50,19 @@ public class Ordonnancement {
 		int n = taches.size();
 		int[] datesTot = new int[n + 1];
 
-		int[] rangs = graphe.calculerRangs();
+		calculerRangs();
+		
+		
+	    ArrayList<Tache> tachesTriees = new ArrayList<>(taches);
+	    tachesTriees.sort((a, b) -> {
 
-		ArrayList<Tache> tachesTriees = new ArrayList<>(taches);
-		tachesTriees.sort((a, b) -> rangs[a.getNumero()] - rangs[b.getNumero()]);
-
+	        int rangA = -1, rangB = -1;
+	        for(Sommet<Tache> s : sommets) {
+	            if(s.getDonnee().equals(a)) rangA = s.getRang();
+	            if(s.getDonnee().equals(b)) rangB = s.getRang();
+	        }
+	        return rangA - rangB;
+	    });
 		for (Tache t : tachesTriees) {
 			int max = 0;
 
@@ -86,12 +94,20 @@ public class Ordonnancement {
         	    datesTard[i] = dureeProjet; 
          }
 		
-         int[] rangs = graphe.calculerRangs(); 
+         calculerRangs(); 
          ArrayList<Tache> tachesInversees = new ArrayList<>(taches);
-         tachesInversees.sort((a, b) -> rangs[b.getNumero()] - rangs[a.getNumero()]);
-         
+         tachesInversees.sort((a, b) -> {
+             // on cherche le sommet correspondant à la tâche
+             // et on lit son rang
+             int rangA = -1, rangB = -1;
+             for(Sommet<Tache> s : sommets) {
+                 if(s.getDonnee().equals(a)) rangA = s.getRang();
+                 if(s.getDonnee().equals(b)) rangB = s.getRang();
+             }
+             return rangB - rangA;
+         });
          for ( Tache t : tachesInversees) {
-        	 for(Sommet<Tache> sommetVoisin : graphe.getVoisins(t)) {
+        	 for(Sommet<Tache> sommetVoisin : getVoisins(t)) {
         		 Tache successeur = sommetVoisin.getDonnee(); 
         		  int tard = datesTard[successeur.getNumero()] - t.getDuree();
         		  if(tard < datesTard[t.getNumero()]) {
@@ -99,18 +115,12 @@ public class Ordonnancement {
         		  }
         	 }
         	 t.setDateTard(datesTard[t.getNumero()]); 
-        	 t.setMarge(datesTard[t.getNumero()] - datesTot[t.getNumero()]);
          }
           return datesTard;
 	}
 
 	public ArrayList<ArrayList<Tache>> getCheminsCritiques() {
 		calculerDatesTard();
-
-
-		int dureeProjet = 0;
-		for (Tache t : taches)
-			dureeProjet = Math.max(dureeProjet, t.getDateTot() + t.getDuree());
 
 		ArrayList<ArrayList<Tache>> resultats = new ArrayList<>();
 		ArrayList<Tache> cheminCourant = new ArrayList<>();

@@ -5,11 +5,19 @@ import java.util.List;
 
 public class GrapheNonOriente<T> extends Graphe<T> {
 	private List<Arc<T>> arbreCouvrant = new ArrayList<Arc<T>>();
-	private int dfsConnexe(int s , boolean[] visite, int nbVisites) {
+	
+	public GrapheNonOriente(int nbsommets) {
+		super(nbsommets);
+		this.estOriente = false;
+		this.estPondere = false;
+
+	}
+	
+	private int dfsConnexe(int s, boolean[] visite, int nbVisites) {
 		visite[s] = true; 
 		nbVisites++;
-		
-		for(int t: getVoisins(s)) {
+		Sommet<T> sommet = trouverSommet(s);
+		for(int t: getVoisins(sommet)) {
 			if(!visite[t]) 
 				nbVisites = dfsConnexe(t, visite, nbVisites);
 			
@@ -22,12 +30,7 @@ public class GrapheNonOriente<T> extends Graphe<T> {
 		pilch[0] = x; 
 	}
 
-	public GrapheNonOriente(int nbsommets) {
-		super(nbsommets);
-		this.estOriente = false;
-		this.estPondere = false;
-
-	}
+	
 
 	public boolean estArbre() {
 		int nbsom = this.getOrdre();
@@ -86,10 +89,10 @@ public class GrapheNonOriente<T> extends Graphe<T> {
 		 return pr;
 
 	}
-
-	public GrapheNonOriente<T> decodagePrufer(int []){
+/**
+	public GrapheNonOriente<T> decodagePrufer(int [] d){
     	  
-      }
+      }*/
 
 	public void afficher() {
         int nbsom = this.getOrdre(); 
