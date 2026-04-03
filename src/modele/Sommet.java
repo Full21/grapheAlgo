@@ -6,6 +6,11 @@ public class Sommet<T> {
 	protected int id;
 	protected T donnee;
 	protected int rang;
+	
+	public Sommet() {
+		this.id = ++nbSommets;
+		this.donnee = (T) new Integer(id);
+	}
 
 	public Sommet(T donnee) {
 		this.id = ++nbSommets;
