@@ -11,13 +11,14 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 	private final int MAX_POIDS = 100;
 
 	// si on connait le nombre de sommets dès le départ
-	public GrapheOrientePondere(int n) {
-		super();
+	public GrapheOrientePondere() {
+		super(100);
+		matricePoids = new double[101][101];
 	};
 
-	public GrapheOrientePondere() {
-		super();
-		matricePoids = new double[1][1];
+	public GrapheOrientePondere(int n ) {
+		super(n);
+		matricePoids = new double[n+1][n+1];
 	}
 
 	
