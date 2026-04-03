@@ -8,37 +8,11 @@ import java.util.ArrayList;
 
 public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPondere {
 	private double[][] matricePoids;
-
-	private void initialiserMatrice(int n) {
-		matricePoids = new double[n+1][n+1];
-		for(int i = 1 ; i <= n ; i++) {
-			for(int j = 1 ; j <= n ; j++) {
-				if( i == j) {
-					matricePoids[i][j] = 0; // la distance d'un sommet à lui même				}
-				}else {
-					matricePoids[i][j] = Double.POSITIVE_INFINITY;// initialiser tous les poids à infini
-				}
-
-
-			}
-
-	private void redimensionnerMatrice() {
-				int n = getOrdre(); // si on ajoute des sommets il faut redimensionner la matrice donc avoir nouveau nombre de sommets  
-				double[][] ancienne = matricePoids;
-
-				initialiserMatrice(n);
-
-				for(int i = 1 ; i < ancienne.length ; i++ ) {
-					for( int j = 1 ; j < ancienne[i].length ; j++) {
-						matricePoids[i][j] = ancienne[i][j];
-					}
-
-				}
+	private final int MAX_POIDS = 100;
 
 	// si on connait le nombre de sommets dès le départ
 	public GrapheOrientePondere(int n) {
 		super();
-		initialiserMatrice(n);
 	};
 
 	public GrapheOrientePondere() {
@@ -46,18 +20,9 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 		matricePoids = new double[1][1];
 	}
 
-	@Override
-	public void ajouterSommet(T sommet) {
-		super.ajouterSommet(donnee);
-		redimensionnerMatrice();
-	}
+	
 
-	@Override
-	public void supprimerSommet(T sommet) {
-		super.supprimerSommet(donnee);
-		redimensionnerMatrice();
-	}
-
+	
 	@Override
 	public double getPoids(int sommet1, int sommet2) {
 		return matricePoids[sommet1][sommet2];
@@ -73,13 +38,20 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 		return matricePoids;
 	}
 
-	/**public List<T> djikstra(T depart , T arrivee ) {
-    	List<T> tableaudjikstra = new ArrayList<>();
-    	//algo de djikstra
-    	return tableaudjikstra;
-    }*/
-
-	public void djikstra(int *fs, int *aps, int **matricePoids , int s ,int *&d , int *&pred) throws Exception  {
+	public boolean verifierConditions() {
+		for (int i = 0; i < matricePoids.length; i++) {
+			for (int j = 0; j < matricePoids[i].length; j++) {
+				if (matricePoids[i][j] < 0) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	
+	
+	public void djikstra(int []fs, int []aps, int [][]matricePoids , int s ,int []d , int []pred) throws Exception  {
 		if(!verifierConditions()) {
 			throw new IllegalStateException( "L'algo de djikstra fonctionne uniquement qu'avec des poids positifs");
 		}
@@ -88,28 +60,30 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 		d[0] = nbSommets; 
 
 		pred = new int [nbSommets+1];
-		bool *ins = new bool [nbSommets+1]; 
+		boolean [] ins = new boolean [nbSommets+1]; 
 
 		for( int i = 1 ; i <= nbSommets ; i++) {
 			d[i] = matricePoids[s][i];
 			pred[i] = s;
 			ins[i] = true;
 		}
+		int j =  0; 
 		ins[s] = false; 
 		int cpt = nbSommets-1; 
 		while (cpt > 0) {
-			int min = MaxPoids; 
+			int min = MAX_POIDS; 
 			for( int i = 1 ; i <= nbSommets ; i++) {
 				if((ins[i]) && (d[i] < min)) {
 					min = d[i];
 					j= i; 
 				}
-				if(min == MaxPoids)
+				if(min == MAX_POIDS)
 					return ; 
 				ins[j] = false;
+				int h = 0;
 				for(int k = aps[j] ; (h=fs[k]) != 0 ; k++) {
 					if(ins[h]) {
-						int r = d[j]+ matricePoids[j][h];
+						int v = d[j]+ matricePoids[j][h];
 						if(v < d[h]) {
 							d[h] = v; 
 							pred[h] = j;
@@ -122,21 +96,12 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 
 	public double[][] dantzig() {
 		int nombreSommet = getOrdre();
-		double[][] tableaudantzig = new Double[nombreSommet][nombreSommet];
+		double[][] tableaudantzig = new double[nombreSommet][nombreSommet];
 		// algo de dantzig
 		return tableaudantzig;
 	}
 
-	public boolean vérifierConditions() {
-		for (int i = 0; i < matricePoids.length; i++) {
-			for (int j = 0; j < matricePoids[i].length; j++) {
-				if (matricePoids[i][j] < 0) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+
 
 	// affichage complet du graphe
 	@Override
@@ -150,7 +115,7 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 		}
 	}
 
-	};
+
 
 	// affichage bref du graphe
 	@Override

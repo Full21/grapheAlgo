@@ -134,8 +134,8 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	
 //	@Override
 //	public List<T> getVoisins(T sommet) {
-//		
-//	}
+	/**La différence c'est juste que getVoisins() est plus pratique à utiliser depuis l'extérieur de la classe (par exemple depuis Ordonnancement ou GestionnaireGraphe),
+	tandis que FS/APS c'est plus bas niveau, utilisé directement dans les algorithmes**/
 	
 	@Override
 	public int getOrdre() {
