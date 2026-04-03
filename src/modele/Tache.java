@@ -11,14 +11,11 @@ public class Tache {
 	public static int NOMBE_DE_TACHES = 0;
 	
 	
-	public Tache(String nom, int duree, int dateTot, int dateTard, int... antecedents) {
+	public Tache(String nom, int duree, int... antecedents) {
 		this.numero = ++NOMBE_DE_TACHES;
 		this.nom = nom;
 		this.duree = duree;
-		this.antecedents = antecedents;
-		this.dateTot = dateTot;
-		this.dateTard = dateTard;
-		
+		this.antecedents = antecedents;		
 	}
 
 	public boolean isCritique() {
@@ -77,5 +74,9 @@ public class Tache {
 		this.dateTard = dateTard;
 	}
 	
+	@Override
+	public String toString() {
+		return this.nom + " (durée=" + this.duree+")";
+	}
 	
 }
