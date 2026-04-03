@@ -20,14 +20,11 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	protected int[][] matriceAdjacence;
 	
 	
-	
 	public Graphe(int nbSommets){
 		this.sommets = new ArrayList<Sommet<T>>();		
 		this.arcs = new ArrayList<Arc<T>>();
 		this.matriceAdjacence = new int[nbSommets + 1][nbSommets + 1];
-	}
-	
-	
+	}		
 	
 	// Ajout et suppression de sommet
 	
@@ -50,9 +47,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		}
 		construireFsEtAps();
 	}
-	
-	
-	
+			
 	// Ajout et suppression des arcs
 	
 	@Override
@@ -131,11 +126,34 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		construireFsEtAps();
 	}
 	
-	
-//	@Override
-//	public List<T> getVoisins(T sommet) {
-//		
-//	}
+	// Les getteurs 
+	@Override
+	public List<Sommet<T>> getVoisins(T sommetData) {
+	    List<Sommet<T>> voisins = new ArrayList<>();
+	    
+	    Sommet<T> sommet = null;
+	    for (Sommet<T> s : this.sommets) {
+	        if (s.getDonnee().equals(sommetData)) {
+	            sommet = s;
+	            break;
+	        }
+	    }
+	    
+	    if (sommet == null) {
+	        return voisins;
+	    }
+	    
+	    int id = sommet.getId();
+	    int voisinIndex = this.aps[id];
+	    
+	    while (voisinIndex != 0) { 
+	        Sommet<T> voisin = this.sommets.get(voisinIndex - 1); 
+	        voisins.add(voisin);
+	        voisinIndex = this.fs[voisinIndex];
+	    }
+	    
+	    return voisins;
+	}
 	
 	@Override
 	public int getOrdre() {
