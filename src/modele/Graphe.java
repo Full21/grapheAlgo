@@ -268,6 +268,8 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 
 	}
 	
+	public abstract void afficher(); 
+	
 	/*	
 	
     private void initialiserMatriceDistance() {
