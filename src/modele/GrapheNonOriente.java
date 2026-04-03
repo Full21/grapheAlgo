@@ -50,59 +50,7 @@ public class GrapheNonOriente<T> extends Graphe<T> {
 	}
 
      
-	public void calculerRangs() {
-		int nbsommets = aps[0];
-		int taillefs = fs[0];
-		int [] rang = new int [nbsommets+1];
-		int [] ddi = new int [nbsommets+1];
-		int [] pilch = new int [nbsommets+1];
-		
-		for( int i = 1 ; i <= nbsommets ; i++)
-			ddi[i] = 0; 
-		 
-		for(int i = 1 ; i <= taillefs ; i++) {
-			int s = fs[i]; 
-			if(s > 0) 
-				ddi[s]++;
-		}
-		
-		pilch[0] = 0; 
-		for( int i = 1 ; i <= nbsommets ; i++) {
-			rang[i] = -1;
-			if(ddi[i] == 0)
-				empiler(i, pilch);
-		}
-		
-	 int k = -1;
-	 int s = pilch[0]; 
-	 
-	 while(pilch[0] > 0) {
-		 k++;
-		 pilch[0] = 0; 
-		 
-		 while( s > 0) {
-			 rang[s] = k; 
-			 int h = aps[s]; 
-			 int t = fs[h];
-			 
-			 while(t > 0) {
-				 ddi[t]--; 
-				 if(ddi[t] == 0)
-					 empiler(t, pilch);
-				 h++;
-				 t = fs[h];
-			 }
-			 s = pilch[s]; 
-		 }
-		 s = pilch[0];
-	 }
-	 
-	 for( int i = 0 ; i < this.sommets.size(); i++) {
-		 this.sommets.get(i).setRang(rang[i+1]);
-	 }
-
-	}
-
+	
 	@Override
 	public void ajouterArc(T donnee1, T donnee2) {
 		super.ajouterArc(donnee1, donnee2);
@@ -181,10 +129,6 @@ public class GrapheNonOriente<T> extends Graphe<T> {
 
 	}
 
-	@Override
-	public List<T> getVoisins(T sommet) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	
 
 }
