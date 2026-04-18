@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * SaisieFichier — Utility
@@ -53,7 +54,11 @@ public class SaisieFichier {
         this.cheminFichier = chemin;
         Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", chemin);
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toString()))) {
-            this.lignes = reader.readAllLines();
+        	this.lignes = new ArrayList<>();
+            String ligne;
+            while ((ligne = reader.readLine()) != null) {
+                this.lignes.add(ligne);
+            }
         } catch (IOException e) {
             System.err.println("Erreur lecture fichier : " + e.getMessage());
             this.lignes = null;
