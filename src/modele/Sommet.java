@@ -2,13 +2,18 @@ package modele;
 
 public class Sommet<T> {
 
-	public static int nbSommets = 0;
+	public static int NB_SOMMETS = 0;
 	protected int id;
 	protected T donnee;
 	protected int rang;
+	
+	public Sommet() {
+		this.id = ++NB_SOMMETS;
+		this.donnee = (T) new Integer(id);
+	}
 
 	public Sommet(T donnee) {
-		this.id = ++nbSommets;
+		this.id = ++NB_SOMMETS;
 		this.donnee = donnee;
 		this.rang = -1;
 	}
@@ -39,5 +44,11 @@ public class Sommet<T> {
 		}
 			
 	}
+
+	public static void setNB_SOMMETS(int nB_SOMMETS) {
+		NB_SOMMETS = nB_SOMMETS;
+	}
+	
+	
 	
 }

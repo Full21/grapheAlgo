@@ -20,14 +20,12 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	protected int[][] matriceAdjacence;
 	
 	
-	
 	public Graphe(int nbSommets){
 		this.sommets = new ArrayList<Sommet<T>>();		
 		this.arcs = new ArrayList<Arc<T>>();
 		this.matriceAdjacence = new int[nbSommets + 1][nbSommets + 1];
-	}
-	
-	
+		Sommet.setNB_SOMMETS(0);
+	}		
 	
 	// Ajout et suppression de sommet
 	
@@ -50,13 +48,11 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		}
 		construireFsEtAps();
 	}
-	
-	
-	
+			
 	// Ajout et suppression des arcs
 	
 	@Override
-	public void ajouterArc(T donnee1, T donnee2) {
+	public void ajouterArc(T donnee1, T donnee2, double poids) {
 		Sommet<T> sommet1 = null;
 		Sommet<T> sommet2 = null;
 		
@@ -65,9 +61,13 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 			if(som.donnee.equals(donnee2)) sommet2 = som;
 		}
 		if(sommet1 != null && sommet2 != null)
-			ajouterArc(sommet1, sommet2);
+			ajouterArc(sommet1, sommet2, poids);
 	}
 	
+	@Override
+	public void ajouterArc(T donnee1, T donnee2) {
+		ajouterArc(donnee1, donnee2, 0);
+	}		
 
 	private void ajouterArc(Sommet<T> sommet1, Sommet<T> sommet2, double poids) {		
 		Arc<T> arc = new Arc<T>(sommet1, sommet2, poids);
@@ -131,11 +131,34 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		construireFsEtAps();
 	}
 	
-	
-//	@Override
-//	public List<T> getVoisins(T sommet) {
-//		
-//	}
+	// Les getteurs 
+	@Override
+	public List<Sommet<T>> getVoisins(T sommetData) {
+	    List<Sommet<T>> voisins = new ArrayList<>();
+	    
+	    Sommet<T> sommet = null;
+	    for (Sommet<T> s : this.sommets) {
+	        if (s.getDonnee().equals(sommetData)) {
+	            sommet = s;
+	            break;
+	        }
+	    }
+	    
+	    if (sommet == null) {
+	        return voisins;
+	    }
+	    
+	    int id = sommet.getId();
+	    int voisinIndex = this.aps[id];
+	    
+	    while (this.fs[voisinIndex] != 0) { 
+	        Sommet<T> voisin = this.sommets.get(this.fs[voisinIndex] - 1); 
+	        voisins.add(voisin);
+	        voisinIndex++;
+	    }
+	    
+	    return voisins;
+	}
 	
 	@Override
 	public int getOrdre() {
@@ -228,7 +251,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		}
 	}
 	
-	private void construireFsEtAps() {		
+	protected void construireFsEtAps() {		
 		int nbSom = this.matriceAdjacence[0][0];
 	    int nbArc = this.matriceAdjacence[0][1];
 		this.fs = new int[nbSom + nbArc + 1];	
@@ -250,63 +273,47 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 
 	}
 	
-	/*	
-	
-    private void initialiserMatriceDistance() {
-    	int nbSom = this.aps[0];
-    	this.matriceDistance = new int[nbSom + 1][nbSom + 1];
-    	matriceDistance[0][0] = nbSom;
-    	matriceDistance[0][1] = this.matriceAdjacence[0][1];
-    	
-    	for(int sommet = 1; sommet <= nbSom; sommet++) {
-    		this.matriceDistance[sommet] = distanceDuSommetR(sommet);
-    	}    	    	
-    }
-
-	
-	private int[] distanceDuSommetR(int r) {
-				
-		int nbSom = this.aps[0];
-	    int i = 0, j = 1, k = 0, ifin, s, t, it;
-
-	    int[] fil = new int[nbSom + 1];
-	    int[] dist = new int[nbSom + 1];
-
-	    fil[0] = nbSom;
-	    dist[0] = nbSom;
-
-	    fil[1] = r;
-
-	    for (int h = 1; h <= nbSom; h++) {
-	        dist[h] = -1;
-	    }
-
-	    dist[r] = 0;
-
-	    while (i < j) {
-	        k++;
-	        ifin = j;
-
-	        while (i < ifin) {
-	            i++;
-	            s = fil[i];
-	            it = aps[s];
-	            t = fs[it];
-
-	            while (t > 0) {
-	                if (dist[t] == -1) {
-	                    j++;
-	                    fil[j] = t;
-	                    dist[t] = k;
-	                }
-	                t = fs[++it];
-	            }
+	protected void construireMatriceAdjacence() {
+	    int n = aps[0]; 
+	    this.matriceAdjacence = new int[n + 1][n + 1];
+	    this.matriceAdjacence[0][0] = n;	   
+	    for (int i = 1; i <= n; i++) {
+	        int k = aps[i];
+	        
+	        while (fs[k] != 0) {
+	            int successeur = fs[k];
+	            matriceAdjacence[i][successeur] = 1;
+	            k++;
 	        }
 	    }
+	}
+	public abstract void afficher(); 
+	
+	public Sommet<T> trouverSommet(int id) {
+		for(Sommet<T> sommet : this.sommets) {
+			if(sommet.getId() == id) {
+				return sommet;
+			}
+		}
+		return null;
+	}
 
-	    return dist;
-		
-	}	*/
+	public List<Sommet<T>> getSommets() {
+		return sommets;
+	}
 
+	public List<Arc<T>> getArcs() {
+		return arcs;
+	}
+
+	public boolean isEstOriente() {
+		return estOriente;
+	}
+
+	public boolean isEstPondere() {
+		return estPondere;
+	}	
+	
+	
 	
 }

@@ -1,7 +1,7 @@
 package modele;
 
 public interface IPondere {
-    double getPoids(int i, int j);
-    void setPoids(int i, int j, double poids);
-    double[][] getMatricePoids();
+   public double getPoids(int sommet1 , int sommet2);
+   public void setPoids(int sommet1 , int sommet2 , double poids);
+   public double [][]getMatricePoids();
 }
