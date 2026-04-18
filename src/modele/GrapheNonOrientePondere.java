@@ -6,6 +6,7 @@ public class GrapheNonOrientePondere<T> extends GrapheNonOriente<T> implements I
 
 	public GrapheNonOrientePondere(int nbSommets) {
 		super(nbSommets);
+		this.estPondere = true;
 	}
 
 	private double[][] matricePoids;
