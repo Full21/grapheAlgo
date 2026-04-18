@@ -5,6 +5,8 @@ import java.util.List;
 
 public class Ordonnancement extends GrapheOriente<Tache>{
 	private List<Tache> taches = new ArrayList<Tache>();
+	private int[] fpcCritique;
+	private int[] appcCritique;
 
 	public Ordonnancement(int nbtaches) {
 		super(nbtaches);
@@ -46,78 +48,125 @@ public class Ordonnancement extends GrapheOriente<Tache>{
 		}
 	}
 
-	public int[] calculerDatesTot() {
-		int n = taches.size();
-		int[] datesTot = new int[n + 1];
-
-		calculerRangs();
-		
-		
-	    ArrayList<Tache> tachesTriees = new ArrayList<>(taches);
-	    tachesTriees.sort((a, b) -> {
-
-	        int rangA = -1, rangB = -1;
-	        for(Sommet<Tache> s : sommets) {
-	            if(s.getDonnee().equals(a)) rangA = s.getRang();
-	            if(s.getDonnee().equals(b)) rangB = s.getRang();
-	        }
-	        return rangA - rangB;
-	    });
-		for (Tache t : tachesTriees) {
-			int max = 0;
-
-			for (int ant : t.getAntecedents()) {
-				Tache tant = taches.get(ant - 1);
-				int fin = datesTot[ant] + tant.getDuree();
-				if (fin > max)
-					max = fin;
-			}
-			datesTot[t.getNumero()] = max;
-			t.setDateTot(max);
-		}
-		return datesTot;
-	}
-
-	public int[] calculerDatesTard() {
-		int n = taches.size(); 
-		int [] datesTot = calculerDatesTot(); 
-		int [] datesTard = new int [n+1]; 
-		
-		int dureeProjet = 0; 
-         for(Tache t: taches ) {
-        	   int fin = datesTot[t.getNumero()] + t.getDuree();
-        	    if( fin > dureeProjet)
-        	    	dureeProjet = fin; 
-         }
-         
-         for( int i = 1 ; i <=  n ; i++) {
-        	    datesTard[i] = dureeProjet; 
-         }
-		
-         calculerRangs(); 
-         ArrayList<Tache> tachesInversees = new ArrayList<>(taches);
-         tachesInversees.sort((a, b) -> {
-             // on cherche le sommet correspondant à la tâche
-             // et on lit son rang
-             int rangA = -1, rangB = -1;
-             for(Sommet<Tache> s : sommets) {
-                 if(s.getDonnee().equals(a)) rangA = s.getRang();
-                 if(s.getDonnee().equals(b)) rangB = s.getRang();
-             }
-             return rangB - rangA;
-         });
-         for ( Tache t : tachesInversees) {
-        	 for(Sommet<Tache> sommetVoisin : getVoisins(t)) {
-        		 Tache successeur = sommetVoisin.getDonnee(); 
-        		  int tard = datesTard[successeur.getNumero()] - t.getDuree();
-        		  if(tard < datesTard[t.getNumero()]) {
-        			  datesTard[t.getNumero()] = tard; 
-        		  }
-        	 }
-        	 t.setDateTard(datesTard[t.getNumero()]); 
-         }
-          return datesTard;
-	}
+    public void calculerDatesTot() {
+        int n = taches.size();
+        
+        // Tableaux traduits du code C++ du prof
+        int[] l    = new int[n + 1];
+        int[] appc = new int[n + 1];
+        int[] fpc  = new int[n + arcs.size() + 2];
+        
+        l[0]    = n;
+        appc[0] = n;
+        l[1]    = 0;
+        fpc[1]  = 0;
+        int kc  = 1;
+        
+        // Trier par rang croissant (ordre topologique)
+        calculerRangs();
+        ArrayList<Tache> tachesTriees = new ArrayList<>(taches);
+        tachesTriees.sort((a, b) -> {
+            int rangA = -1, rangB = -1;
+            for (Sommet<Tache> s : sommets) {
+                if (s.getDonnee().equals(a)) rangA = s.getRang();
+                if (s.getDonnee().equals(b)) rangB = s.getRang();
+            }
+            return rangA - rangB;
+        });
+        
+        // Boucle principale — traduite du prof (for i = 2 à n)
+        for (int idx = 1; idx < tachesTriees.size(); idx++) {
+            Tache t = tachesTriees.get(idx);
+            int i   = t.getNumero();
+            
+            l[i]    = 0;
+            appc[i] = kc + 1;
+            
+            // Parcours des antécédents de la tâche i
+            for (int antId : t.getAntecedents()) {
+                Tache ant = taches.get(antId - 1);
+                int j     = ant.getNumero();
+                int v     = l[j] + ant.getDuree();
+                
+                if (v > l[i]) {
+                    l[i]    = v;
+                    kc      = appc[i] - 1;
+                    kc++;
+                    fpc[kc] = j;
+                } else if (v == l[i]) {
+                    kc++;
+                    fpc[kc] = j;
+                }
+            }
+            
+            kc++;
+            fpc[kc] = 0;
+            
+            // Mettre à jour la date au plus tôt de la tâche
+            t.setDateTot(l[i]);
+        }
+        
+        fpc[0] = kc;
+        
+        // Stocker pour utilisation dans calculerDatesTard et getCheminsCritiques
+        this.setFpcCritique(fpc);
+        this.setAppcCritique(appc);
+    }
+    
+    public int[] calculerDatesTard() {
+        // Appel de calculerDatesTot() qui remplit les dateTot dans chaque tâche
+        calculerDatesTot();
+        
+        int n = taches.size();
+        
+        // Récupérer les dates au plus tôt depuis les tâches directement
+        int[] datesTot = new int[n + 1];
+        for (Tache t : taches) {
+            datesTot[t.getNumero()] = t.getDateTot();
+        }
+        
+        int[] datesTard = new int[n + 1];
+        
+        // Calculer la durée totale du projet
+        int dureeProjet = 0;
+        for (Tache t : taches) {
+            int fin = datesTot[t.getNumero()] + t.getDuree();
+            if (fin > dureeProjet)
+                dureeProjet = fin;
+        }
+        
+        // Initialiser toutes les dates tard à dureeProjet
+        for (int i = 1; i <= n; i++) {
+            datesTard[i] = dureeProjet;
+        }
+        
+        // Trier par rang décroissant
+        calculerRangs();
+        ArrayList<Tache> tachesInversees = new ArrayList<>(taches);
+        tachesInversees.sort((a, b) -> {
+            int rangA = -1, rangB = -1;
+            for (Sommet<Tache> s : sommets) {
+                if (s.getDonnee().equals(a)) rangA = s.getRang();
+                if (s.getDonnee().equals(b)) rangB = s.getRang();
+            }
+            return rangB - rangA;
+        });
+        
+        // Calculer les dates au plus tard
+        for (Tache t : tachesInversees) {
+            for (Sommet<Tache> sommetVoisin : getVoisins(t)) {
+                Tache successeur = sommetVoisin.getDonnee();
+                int tard = datesTard[successeur.getNumero()] - t.getDuree();
+                if (tard < datesTard[t.getNumero()]) {
+                    datesTard[t.getNumero()] = tard;
+                }
+            }
+            t.setDateTard(datesTard[t.getNumero()]);
+        }
+        
+        return datesTard;
+    }
+    
 
 	public ArrayList<ArrayList<Tache>> getCheminsCritiques() {
 		calculerDatesTard();
@@ -176,6 +225,22 @@ public class Ordonnancement extends GrapheOriente<Tache>{
 			System.out.println("  " + ligne);
 		}
 
+	}
+
+	public int[] getFpcCritique() {
+		return fpcCritique;
+	}
+
+	public void setFpcCritique(int[] fpcCritique) {
+		this.fpcCritique = fpcCritique;
+	}
+
+	public int[] getAppcCritique() {
+		return appcCritique;
+	}
+
+	public void setAppcCritique(int[] appcCritique) {
+		this.appcCritique = appcCritique;
 	}
 
 }
