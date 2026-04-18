@@ -14,6 +14,7 @@ public class GrapheOriente<T> extends Graphe<T> {
     public GrapheOriente(int nbSommets) {
         super(nbSommets);
         this.composantesCC = new ArrayList<>();
+        this.estOriente = true;
     }
 
 

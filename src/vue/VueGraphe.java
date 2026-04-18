@@ -297,6 +297,7 @@ public class VueGraphe extends JPanel {
 
 		graphe1.ajouterArc(4, 7, 0);		
 
+
 		VueGraphe vg = new VueGraphe(graphe1);
 
 		//affiche2D(vg.positionsSommets);
@@ -312,6 +313,7 @@ public class VueGraphe extends JPanel {
 
 		JFrame frame = new JFrame();
 		frame.setSize(600, 600);
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLayout(new BorderLayout());
 		frame.add(vg, BorderLayout.CENTER);
