@@ -9,11 +9,13 @@ import java.util.ArrayList;
 public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPondere {
 	private double[][] matricePoids;
 	private final int MAX_POIDS = 100;
+     
 
 	// si on connait le nombre de sommets dès le départ
 	public GrapheOrientePondere() {
 		super(100);
 		matricePoids = new double[101][101];
+		this.estPondere  = true; 
 	};
 
 	public GrapheOrientePondere(int n ) {
