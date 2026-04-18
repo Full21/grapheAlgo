@@ -287,13 +287,16 @@ public class VueGraphe extends JPanel {
 		graphe1.ajouterArc("Mulhouse1", "Mulhouse6", 1);*/
 		
 		graphe1.ajouterArc(1, 2, 6);
-		graphe1.ajouterArc(1, 5, 6);
 		graphe1.ajouterArc(1, 6, 7);
+		graphe1.ajouterArc(1, 3, 7);
+		graphe1.ajouterArc(5, 4, 7);
 
 		graphe1.ajouterArc(2, 4, 8);
+		graphe1.ajouterArc(2, 3, 8);
+		graphe1.ajouterArc(3, 4, 8);
 
-		graphe1.ajouterArc(4, 3, -1);
-		graphe1.ajouterArc(4, 7, 0);	
+		graphe1.ajouterArc(4, 7, 0);		
+
 
 		VueGraphe vg = new VueGraphe(graphe1);
 
@@ -309,7 +312,8 @@ public class VueGraphe extends JPanel {
 		});
 
 		JFrame frame = new JFrame();
-		frame.setSize(300, 300);
+		frame.setSize(600, 600);
+
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLayout(new BorderLayout());
 		frame.add(vg, BorderLayout.CENTER);
