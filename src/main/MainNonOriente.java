@@ -2,13 +2,14 @@ package main;
 
 import java.util.List;
 
+import modele.GrapheNonOriente;
 import modele.GrapheOriente;
 import modele.Sommet;
 
-public class Main {
+public class MainNonOriente {
 
 	public static void main(String[] args) {
-		GrapheOriente<Integer> graphe = new GrapheOriente<Integer>(7);
+		GrapheNonOriente<Integer> graphe = new GrapheNonOriente<Integer>(7);
 		
 		graphe.ajouterSommet(1);
 		graphe.ajouterSommet(2);
@@ -31,16 +32,59 @@ public class Main {
 		
 		graphe.ajouterArc(7, 2);
 		graphe.ajouterArc(7, 4);
-		graphe.calculerRangs();
 		
-		afficherRangsSommets(graphe);
-		affiche2D(graphe.calculerDistances());
+		affiche2D(graphe.getMatriceAdjacence());
 		
-		System.out.println("Les base du graphe");
-		afficheListe1D(graphe.getBases());
+		String arbre = graphe.estArbre() ? "Oui, c'est un arbre" : "Non, c'en est pas un";
+		System.out.println(arbre);
+		
+		String connexe = graphe.estConnexe() ? "Oui, c'est un graphe connnexe" : "Non, ce n'est pas connexe";
+		System.out.println(connexe);
+		
+//		try {
+//			//affiche1D(graphe.codagePrufer());
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		
+		GrapheNonOriente<Integer> graphe1 = new GrapheNonOriente<Integer>(7);
+		
+		graphe1.ajouterSommet(1);
+		graphe1.ajouterSommet(2);
+		graphe1.ajouterSommet(3);
+		graphe1.ajouterSommet(4);
+		graphe1.ajouterSommet(5);
+		graphe1.ajouterSommet(6);
+		graphe1.ajouterSommet(7);
+		
+		graphe1.ajouterArc(1, 2);
+		graphe1.ajouterArc(1, 5);
+		graphe1.ajouterArc(1, 6);
+		
+		graphe1.ajouterArc(2, 4);
+		
+		graphe1.ajouterArc(4, 3);
+		graphe1.ajouterArc(4, 7);
+					
+		
+		affiche2D(graphe1.getMatriceAdjacence());
+		
+		String arbre1 = graphe1.estArbre() ? "Oui, c'est un arbre" : "Non, c'en est pas un";
+		System.out.println(arbre1);
+		
+		String connexe1 = graphe1.estConnexe() ? "Oui, c'est un graphe connnexe" : "Non, ce n'est pas connexe";
+		System.out.println(connexe1);
+		
+		try {
+			affiche1D(graphe1.codagePrufer());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
-
 	
 	public static void affiche1D(int[] tab) {
 	    for (int t : tab) {
@@ -81,5 +125,5 @@ public class Main {
 	    }
 	    System.out.println(); // retour à la ligne
 	}
-}
 
+}

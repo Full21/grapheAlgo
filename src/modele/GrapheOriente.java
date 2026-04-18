@@ -14,6 +14,7 @@ public class GrapheOriente<T> extends Graphe<T> {
     public GrapheOriente(int nbSommets) {
         super(nbSommets);
         this.composantesCC = new ArrayList<>();
+        this.estOriente = true;
     }
 
 
@@ -200,23 +201,32 @@ public class GrapheOriente<T> extends Graphe<T> {
         for (Sommet<T> s : sommets) s.setRang(-1);
 
         int rang = 0;
-        boolean progression = true;
 
-        while (progression) {
-            progression = false;
-            for (int i = 0; i < n; i++) {
-                if (ddi[i] == 0 && sommets.get(i).getRang() == -1) {
-                    sommets.get(i).setRang(rang);
-                    ddi[i] = -1;
-                    progression = true;
-                    for (Arc<T> arc : arcs) {
-                        if (sommets.indexOf(arc.source) == i) {
-                            int t = sommets.indexOf(arc.destination);
-                            if (ddi[t] > 0) ddi[t]--;
+        List<Integer> courant = new ArrayList<>();
+
+        // initialisation
+        for (int i = 0; i < n; i++) {
+            if (ddi[i] == 0) courant.add(i);
+        }
+
+        while (!courant.isEmpty()) {
+            List<Integer> suivant = new ArrayList<>();
+
+            for (int i : courant) {
+                sommets.get(i).setRang(rang);
+
+                for (Arc<T> arc : arcs) {
+                    if (sommets.indexOf(arc.source) == i) {
+                        int t = sommets.indexOf(arc.destination);
+                        ddi[t]--;
+                        if (ddi[t] == 0) {
+                            suivant.add(t);
                         }
                     }
                 }
             }
+
+            courant = suivant;
             rang++;
         }
     }

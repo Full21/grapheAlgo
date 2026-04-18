@@ -24,6 +24,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		this.sommets = new ArrayList<Sommet<T>>();		
 		this.arcs = new ArrayList<Arc<T>>();
 		this.matriceAdjacence = new int[nbSommets + 1][nbSommets + 1];
+		Sommet.setNB_SOMMETS(0);
 	}		
 	
 	// Ajout et suppression de sommet
@@ -51,7 +52,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	// Ajout et suppression des arcs
 	
 	@Override
-	public void ajouterArc(T donnee1, T donnee2) {
+	public void ajouterArc(T donnee1, T donnee2, double poids) {
 		Sommet<T> sommet1 = null;
 		Sommet<T> sommet2 = null;
 		
@@ -60,9 +61,13 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 			if(som.donnee.equals(donnee2)) sommet2 = som;
 		}
 		if(sommet1 != null && sommet2 != null)
-			ajouterArc(sommet1, sommet2);
+			ajouterArc(sommet1, sommet2, poids);
 	}
 	
+	@Override
+	public void ajouterArc(T donnee1, T donnee2) {
+		ajouterArc(donnee1, donnee2, 0);
+	}		
 
 	private void ajouterArc(Sommet<T> sommet1, Sommet<T> sommet2, double poids) {		
 		Arc<T> arc = new Arc<T>(sommet1, sommet2, poids);
@@ -146,10 +151,10 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	    int id = sommet.getId();
 	    int voisinIndex = this.aps[id];
 	    
-	    while (voisinIndex != 0) { 
-	        Sommet<T> voisin = this.sommets.get(voisinIndex - 1); 
+	    while (this.fs[voisinIndex] != 0) { 
+	        Sommet<T> voisin = this.sommets.get(this.fs[voisinIndex] - 1); 
 	        voisins.add(voisin);
-	        voisinIndex = this.fs[voisinIndex];
+	        voisinIndex++;
 	    }
 	    
 	    return voisins;
@@ -211,31 +216,31 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	
 	@Override
 	public void charger(String fichier) {
-		Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", fichier);
-		try(BufferedReader reader = new BufferedReader(new FileReader(path.toString()))){			
-			List<String> lignes = reader.readAllLines();
-			
-			String[] donnees = lignes.get(0).split(";"); 
-			int nbSom = Integer.parseInt(donnees[0]);
-			int nbArc = Integer.parseInt(donnees[1]);
-			
-			// Construire FS			
-			this.fs = new int[nbSom + nbArc + 1];
-			charger(lignes.get(2), fs);					
-			
-			// Construire APS
-			this.aps = new int[nbSom + 1];
-			charger(lignes.get(4), aps);
-			
-			// Construire Matrice Adjacence
-			this.matriceAdjacence = new int[nbSom + 1][nbSom + 1];
-			for(int i = 6; i <= nbSom; i++) {
-				charger(lignes.get(i), matriceAdjacence[i - 6]);
-			}					
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	    Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", fichier);
+	    try {
+	        List<String> lignes = Files.readAllLines(path);
+
+	        String[] donnees = lignes.get(0).split(";");
+	        int nbSom = Integer.parseInt(donnees[0]);
+	        int nbArc = Integer.parseInt(donnees[1]);
+
+	        // Construire FS
+	        this.fs = new int[nbSom + nbArc + 1];
+	        charger(lignes.get(2), fs);
+
+	        // Construire APS
+	        this.aps = new int[nbSom + 1];
+	        charger(lignes.get(4), aps);
+
+	        // Construire Matrice Adjacence
+	        this.matriceAdjacence = new int[nbSom + 1][nbSom + 1];
+	        for(int i = 6; i <= 6 + nbSom; i++) {
+	            charger(lignes.get(i), matriceAdjacence[i - 6]);
+	        }
+
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
 	}
 	
 	private void charger(String ligne, int[] tab) {
@@ -246,7 +251,7 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		}
 	}
 	
-	private void construireFsEtAps() {		
+	protected void construireFsEtAps() {		
 		int nbSom = this.matriceAdjacence[0][0];
 	    int nbArc = this.matriceAdjacence[0][1];
 		this.fs = new int[nbSom + nbArc + 1];	
@@ -268,6 +273,20 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 
 	}
 	
+	protected void construireMatriceAdjacence() {
+	    int n = aps[0]; 
+	    this.matriceAdjacence = new int[n + 1][n + 1];
+	    this.matriceAdjacence[0][0] = n;	   
+	    for (int i = 1; i <= n; i++) {
+	        int k = aps[i];
+	        
+	        while (fs[k] != 0) {
+	            int successeur = fs[k];
+	            matriceAdjacence[i][successeur] = 1;
+	            k++;
+	        }
+	    }
+	}
 	public abstract void afficher(); 
 	
 	public Sommet<T> trouverSommet(int id) {
@@ -278,64 +297,23 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 		}
 		return null;
 	}
+
+	public List<Sommet<T>> getSommets() {
+		return sommets;
+	}
+
+	public List<Arc<T>> getArcs() {
+		return arcs;
+	}
+
+	public boolean isEstOriente() {
+		return estOriente;
+	}
+
+	public boolean isEstPondere() {
+		return estPondere;
+	}	
 	
-	/*	
 	
-    private void initialiserMatriceDistance() {
-    	int nbSom = this.aps[0];
-    	this.matriceDistance = new int[nbSom + 1][nbSom + 1];
-    	matriceDistance[0][0] = nbSom;
-    	matriceDistance[0][1] = this.matriceAdjacence[0][1];
-    	
-    	for(int sommet = 1; sommet <= nbSom; sommet++) {
-    		this.matriceDistance[sommet] = distanceDuSommetR(sommet);
-    	}    	    	
-    }
-
-	
-	private int[] distanceDuSommetR(int r) {
-				
-		int nbSom = this.aps[0];
-	    int i = 0, j = 1, k = 0, ifin, s, t, it;
-
-	    int[] fil = new int[nbSom + 1];
-	    int[] dist = new int[nbSom + 1];
-
-	    fil[0] = nbSom;
-	    dist[0] = nbSom;
-
-	    fil[1] = r;
-
-	    for (int h = 1; h <= nbSom; h++) {
-	        dist[h] = -1;
-	    }
-
-	    dist[r] = 0;
-
-	    while (i < j) {
-	        k++;
-	        ifin = j;
-
-	        while (i < ifin) {
-	            i++;
-	            s = fil[i];
-	            it = aps[s];
-	            t = fs[it];
-
-	            while (t > 0) {
-	                if (dist[t] == -1) {
-	                    j++;
-	                    fil[j] = t;
-	                    dist[t] = k;
-	                }
-	                t = fs[++it];
-	            }
-	        }
-	    }
-
-	    return dist;
-		
-	}	*/
-
 	
 }
