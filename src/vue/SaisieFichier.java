@@ -1,4 +1,4 @@
-package modele;
+package vue;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -8,6 +8,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+
+import modele.GestionnaireGraphe;
+import modele.Graphe;
+import modele.GrapheNonOriente;
+import modele.GrapheNonOrientePondere;
+import modele.GrapheOriente;
+import modele.GrapheOrientePondere;
+
 import java.util.ArrayList;
 
 /**
