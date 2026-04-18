@@ -211,31 +211,31 @@ public abstract class Graphe <T> implements IGraphe<T>, ISauvegardable{
 	
 	@Override
 	public void charger(String fichier) {
-		Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", fichier);
-		try(BufferedReader reader = new BufferedReader(new FileReader(path.toString()))){			
-			List<String> lignes = reader.readAllLines();
-			
-			String[] donnees = lignes.get(0).split(";"); 
-			int nbSom = Integer.parseInt(donnees[0]);
-			int nbArc = Integer.parseInt(donnees[1]);
-			
-			// Construire FS			
-			this.fs = new int[nbSom + nbArc + 1];
-			charger(lignes.get(2), fs);					
-			
-			// Construire APS
-			this.aps = new int[nbSom + 1];
-			charger(lignes.get(4), aps);
-			
-			// Construire Matrice Adjacence
-			this.matriceAdjacence = new int[nbSom + 1][nbSom + 1];
-			for(int i = 6; i <= nbSom; i++) {
-				charger(lignes.get(i), matriceAdjacence[i - 6]);
-			}					
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	    Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", fichier);
+	    try {
+	        List<String> lignes = Files.readAllLines(path);
+
+	        String[] donnees = lignes.get(0).split(";");
+	        int nbSom = Integer.parseInt(donnees[0]);
+	        int nbArc = Integer.parseInt(donnees[1]);
+
+	        // Construire FS
+	        this.fs = new int[nbSom + nbArc + 1];
+	        charger(lignes.get(2), fs);
+
+	        // Construire APS
+	        this.aps = new int[nbSom + 1];
+	        charger(lignes.get(4), aps);
+
+	        // Construire Matrice Adjacence
+	        this.matriceAdjacence = new int[nbSom + 1][nbSom + 1];
+	        for(int i = 6; i <= 6 + nbSom; i++) {
+	            charger(lignes.get(i), matriceAdjacence[i - 6]);
+	        }
+
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
 	}
 	
 	private void charger(String ligne, int[] tab) {
