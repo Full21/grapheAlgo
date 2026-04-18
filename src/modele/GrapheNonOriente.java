@@ -21,9 +21,11 @@ public class GrapheNonOriente<T> extends Graphe<T> {
 		if (sommet == null)
 			return nbVisites;
 
+
 		for (Sommet<T> voisin : getVoisins(sommet.getDonnee())) {
 			int idVoisin = voisin.getId();
 			if (idVoisin < visite.length && !visite[idVoisin]) {
+
 				nbVisites = dfsConnexe(idVoisin, visite, nbVisites);
 			}
 		}
