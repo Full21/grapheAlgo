@@ -38,7 +38,8 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 	public double[][] getMatricePoids() {
 		return matricePoids;
 	}
-
+	
+	
 	public boolean verifierConditions() {
 		for (int i = 0; i < matricePoids.length; i++) {
 			for (int j = 0; j < matricePoids[i].length; j++) {
@@ -94,16 +95,65 @@ public class GrapheOrientePondere<T> extends GrapheOriente<T> implements IPonder
 			}
 		}
 	}
-
-	public double[][] dantzig() {
-		int nombreSommet = getOrdre();
-		double[][] tableaudantzig = new double[nombreSommet][nombreSommet];
-		// algo de dantzig
-		return tableaudantzig;
+	
+	//methode pour une initialisation parfaite de la matrice dantzig pour l'utilisateur 
+	
+	public double[][] initialiserMatriceDistances() {
+	    int nombreSommet = getOrdre();
+	    double[][] c = new double[nombreSommet + 1][nombreSommet + 1];
+	    
+	    for (int i = 1; i <= nombreSommet; i++) {
+	        for (int j = 1; j <= nombreSommet; j++) {
+	            if (i == j) {
+	                c[i][j] = 0;
+	            } else if (this.matriceAdjacence[i][j] == 1) {
+	                c[i][j] = this.matricePoids[i][j];
+	            } else {
+	                c[i][j] = Double.POSITIVE_INFINITY;
+	            }
+	        }
+	    }
+	    return c;
 	}
 
-
-
+	public boolean dantzig(double[][] c) {
+	    int nombreSommet = getOrdre();
+	    
+	    for (int k = 1; k < nombreSommet; k++) {
+	        for (int i = 1; i <= k; i++) {
+	            for (int j = 1; j <= k; j++) {
+	                // Mise à jour de c[i][k+1]
+	                double x = c[i][j] + c[j][k + 1];
+	                if (x < c[i][k + 1]) {
+	                    c[i][k + 1] = x;
+	                }
+	                // Mise à jour de c[k+1][i]
+	                double y = c[k + 1][j] + c[j][i];
+	                if (y < c[k + 1][i]) {
+	                    c[k + 1][i] = y;
+	                }
+	            }
+	            // Détection d'un circuit de poids négatif
+	            if (c[i][k + 1] + c[k + 1][i] < 0) {
+	                System.out.println("Circuit de poids négatif détecté !");
+	                return false;
+	            }
+	        }
+	        // Mise à jour des distances entre anciens sommets
+	        for (int i = 1; i <= k; i++) {
+	            for (int j = 1; j <= k; j++) {
+	                double x = c[i][k + 1] + c[k + 1][j];
+	                if (x < c[i][j]) {
+	                    c[i][j] = x;
+	                }
+	            }
+	        }
+	    }
+	    
+	    return true;
+	}
+	
+	
 	// affichage complet du graphe
 	@Override
 	public void afficher() {
