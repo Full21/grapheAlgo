@@ -48,7 +48,18 @@ public class Sommet<T> {
 	public static void setNB_SOMMETS(int nB_SOMMETS) {
 		NB_SOMMETS = nB_SOMMETS;
 	}
-	
-	
+
+	public static int getNB_SOMMETS() {
+		return NB_SOMMETS;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public void setDonnee(T donnee) {
+		this.donnee = donnee;
+	}
+		
 	
 }

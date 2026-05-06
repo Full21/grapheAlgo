@@ -20,4 +20,5 @@ public interface IGraphe<T> {
     int[][] getMatriceAdjacence();
     int[]   getFs();
     int[]   getAps();
+	
 }

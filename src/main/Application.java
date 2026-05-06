@@ -1,18 +1,21 @@
 package main;
 
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import vue.FenetreApplication;
+
 public class Application {
-	//private GestionnaireGraphe grstionnaire;
-	//private FenetreApplication fenetre;
-	
-	public static void main(String args[]) {
-		
-	}
-	
-	public void demarrer() {
-		
-	}
-	
-	public void initialiser() {
-		
-	}
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+    	try {
+			UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			e.printStackTrace();
+		}
+       java.awt.EventQueue.invokeLater(() -> new FenetreApplication().setVisible(true));
+    }	
 }

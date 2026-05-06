@@ -1,421 +1,480 @@
 package vue;
 
 import java.awt.BasicStroke;
-import java.awt.BorderLayout;
-import java.awt.Button;
 import java.awt.Color;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
-import modele.Arc;
-import modele.Graphe;
-import modele.GrapheNonOriente;
-import modele.GrapheNonOrientePondere;
-import modele.GrapheOrientePondere;
-import modele.Sommet;
-
-import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
+import modele.Arc;
+import modele.Graphe;
+import modele.Sommet;
+
+
 public class VueGraphe extends JPanel {
 
-	private Graphe<?> graphe;
-	private int[][] positionsSommets;
-	private int sommetSelectionne;
-	private double zoom;
-	private static int RAYON = 55;
+ 
+    private Graphe<?>  graphe;
+    private double     zoom;
+    private static int RAYON = 55;
 
-	public VueGraphe(Graphe<?> graphe) {
-		this.graphe = graphe;
+    private int[] positionsX;
+    private int[] positionsY;
 
-		int nbSom = graphe.getAps()[0];
-		positionsSommets = new int[nbSom][nbSom];
-		placerSommetsSurGrilleStatique();
 
-		sommetSelectionne = 1;
-		zoom = 1.0;
-	}
+    private Sommet<?> sommetSourceSelectionne;
 
-	@Override
-	public void paintComponent(Graphics g) {
-		super.paintComponent(g);
+    private SaisieSouris saisieSouris;
 
-		Graphics2D g2 = (Graphics2D) g;
-		g2.setStroke(new BasicStroke(2));
-		g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g2.setColor(Color.BLACK);
+    public VueGraphe(Graphe<?> graphe) {
+        this.graphe = graphe;
+        int nbSom = graphe.getSommets().size();
+        this.positionsX = new int[nbSom];
+        this.positionsY = new int[nbSom];
+        this.zoom = 1.0;
+        this.sommetSourceSelectionne = null;
 
-		List<PointID> cs = new ArrayList<>();
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                placerSommetsSurGrilleStatique();
+                repaint();
+            }
+        });
 
-		int i = 0, r = RAYON - 1;
+        setBackground(new Color(13, 17, 38));
+        this.saisieSouris = new SaisieSouris(this);
+        addMouseListener(this.saisieSouris);
+        addMouseMotionListener(this.saisieSouris);
+    }
 
-		for (int ligne = 0; ligne < positionsSommets.length; ligne++) {
-			for (int col = 0; col < positionsSommets[ligne].length; col++) {
-				if (positionsSommets[ligne][col] == 1) {
-					int x = col * RAYON;
-					int y = ligne * RAYON;
-					cs.add(new PointID(new Point(x, y), i + 1));
-					dessinerSommet(g2, graphe.getSommets().get(i++), x, y, r);
-				}
-			}
-		}
+    public VueGraphe() {
+        this.positionsX = new int[0];
+        this.positionsY = new int[0];
+        this.zoom = 1.0;
+    }
 
-		dessinerArcs(g2, cs);
-	}
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
 
-	public void dessinerSommet(Graphics2D g, Sommet<?> s, int x, int y, int r) {
-		g.drawOval(x, y, r, r);
+        if (graphe == null) return;
 
-		String texte = String.valueOf(s.getDonnee().toString());
-		FontMetrics fm = g.getFontMetrics();
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setStroke(new BasicStroke(2));
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setColor(Color.BLACK);
 
-		int textWidth = fm.stringWidth(texte);
-		int textHeight = fm.getAscent();
+        List<PointID> cs = new ArrayList<>();
+        int r = RAYON - 1;
 
-		int xCentre = x + (r - textWidth) / 2;
-		int yCentre = y + (r + textHeight) / 2;
-				
-		g.drawString(texte, xCentre, yCentre);
+        for (int i = 0; i < graphe.getSommets().size() && i < positionsX.length; i++) {
+            int x = positionsX[i];
+            int y = positionsY[i];
+            cs.add(new PointID(new Point(x, y), graphe.getSommets().get(i).getId()));
+            dessinerSommet(g2, graphe.getSommets().get(i), x, y, r);
+        }
 
-	}
+        dessinerArcs(g2, cs);
+    }
 
-	public void dessinerArc(Graphics2D g, Arc<?> s, List<PointID> cs) {
-
-	    int idSource = s.getSource().getId();
-	    int idDest = s.getDestination().getId();
-
-	    PointID p1 = null, p2 = null;
-
-	    for (PointID c : cs) {
-	        if (c.getId() == idSource) p1 = c;
-	        if (c.getId() == idDest)   p2 = c;
+    public void dessinerSommet(Graphics2D g, Sommet<?> s, int x, int y, int r) {
+	   if (s == sommetSourceSelectionne) {
+	        g.setColor(new Color(255, 64, 161)); 
+	        g.fillOval(x, y, r, r);
+	        g.setColor(new Color(255, 150, 200));
+	        g.drawOval(x, y, r, r);
+	    } else {
+	        g.setColor(new Color(30, 38, 68));   
+	        g.fillOval(x, y, r, r);
+	        g.setColor(new Color(0, 229, 255)); 
+	        g.drawOval(x, y, r, r);
 	    }
+	   
+	   String texte = "";
+	   if(s.getDonnee().getClass().getSimpleName().equalsIgnoreCase("Integer")) {
+		   texte = String.valueOf(s.getDonnee().toString());
+	   } else {
+		   texte = String.valueOf(s.getDonnee().toString()+"("+s.getId()+")");
+	   }
+               
+        FontMetrics fm = g.getFontMetrics();
 
-	    if (p1 == null || p2 == null) return;
+        int textWidth  = fm.stringWidth(texte);
+        int textHeight = fm.getAscent();
 
-	    double rayon = (RAYON - 1) / 2.0;
+        int xCentre = x + (r - textWidth) / 2;
+        int yCentre = y + (r + textHeight) / 2;
+        
+        g.setColor(new Color(230, 235, 245));
+        g.drawString(texte, xCentre, yCentre);
+    }
 
-	    double x1 = p1.getP().getX() + rayon;
-	    double y1 = p1.getP().getY() + rayon;
-	    double x2 = p2.getP().getX() + rayon;
-	    double y2 = p2.getP().getY() + rayon;
+    public void dessinerArc(Graphics2D g, Arc<?> s, List<PointID> cs) {
+        int idSource = s.getSource().getId();
+        int idDest   = s.getDestination().getId();
 
-	    double angle = Math.atan2(y2 - y1, x2 - x1);
+        PointID p1 = null, p2 = null;
+        for (PointID c : cs) {
+            if (c.getId() == idSource) p1 = c;
+            if (c.getId() == idDest)   p2 = c;
+        }
+        if (p1 == null || p2 == null) return;
 
-	    double startX = x1 + rayon * Math.cos(angle);
-	    double startY = y1 + rayon * Math.sin(angle);
+        double rayon = (RAYON - 1) / 2.0;
 
-	    double endX = x2 - rayon * Math.cos(angle);
-	    double endY = y2 - rayon * Math.sin(angle);
+        double x1 = p1.getP().getX() + rayon;
+        double y1 = p1.getP().getY() + rayon;
+        double x2 = p2.getP().getX() + rayon;
+        double y2 = p2.getP().getY() + rayon;
 
-	    g.setColor(Color.BLACK);
-	    g.drawLine((int) startX, (int) startY, (int) endX, (int) endY);
+        if (idSource == idDest) {
+            dessinerBoucle(g, s, x1, y1, rayon);
+            return;
+        }
 
-	    if (graphe.isEstOriente()) {
-	        dessinerFleche(g, endX, endY, angle);
-	    }
+        double angle = Math.atan2(y2 - y1, x2 - x1);
 
-	    dessinerPoids(g, s, x1, y1, x2, y2);
-	}
+        double startX = x1 + rayon * Math.cos(angle);
+        double startY = y1 + rayon * Math.sin(angle);
+        double endX   = x2 - rayon * Math.cos(angle);
+        double endY   = y2 - rayon * Math.sin(angle);
+
+        g.setColor(new Color(102, 240, 255));
+        g.drawLine((int) startX, (int) startY, (int) endX, (int) endY);
+
+        if (graphe.isEstOriente()) {
+            dessinerFleche(g, endX, endY, angle);
+        }
+
+        dessinerPoids(g, s, x1, y1, x2, y2);
+    }
+
+    
+    private void dessinerBoucle(Graphics2D g, Arc<?> s, double cx, double cy, double rayonSommet) {
+        g.setColor(new Color(102, 240, 255));
+
+       
+        double rayonBoucle = rayonSommet * 0.6;
+        double centreXBoucle = cx + rayonSommet * 0.7;
+        double centreYBoucle = cy - rayonSommet * 0.7;
+
+        int diam = (int) (rayonBoucle * 2);
+        g.drawOval(
+            (int) (centreXBoucle - rayonBoucle),
+            (int) (centreYBoucle - rayonBoucle),
+            diam, diam);
+
+        // Si orienté, dessiner une petite flèche au point où la boucle "rentre"
+        // dans le sommet (en bas à gauche du petit cercle)
+        if (graphe.isEstOriente()) {
+            double angleEntree = Math.toRadians(225);  // direction sud-ouest
+            double fx = centreXBoucle + rayonBoucle * Math.cos(angleEntree);
+            double fy = centreYBoucle + rayonBoucle * Math.sin(angleEntree);
+
+            double angleFleche = angleEntree + Math.PI / 2;
+            dessinerFleche(g, fx, fy, angleFleche);
+        }
+
+        // Afficher le poids à côté de la boucle si pondéré
+        if (graphe.isEstPondere()) {
+            g.setColor(new Color(255, 213, 0));
+            String poids = String.valueOf(s.getPoids());
+            FontMetrics fm = g.getFontMetrics();
+            int w = fm.stringWidth(poids);
+            g.drawString(poids,
+                (int) (centreXBoucle - w / 2.0),
+                (int) (centreYBoucle - rayonBoucle - 4));
+        }
+    }
+
+    public void dessinerPoids(Graphics2D g, Arc<?> s, double x1, double y1, double x2, double y2) {
+        if (!graphe.isEstPondere()) return;
+
+        double mx = (x1 + x2) / 2;
+        double my = (y1 + y2) / 2;
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double length = Math.sqrt(dx * dx + dy * dy);
+        if (length == 0) return;
+
+        dx /= length;
+        dy /= length;
+        dy += 1;
+
+        double offset = 5;
+        double px = -dy * offset;
+        double py =  dx * offset;
+
+        double tx = mx + px;
+        double ty = my + py;
+
+        String poids = String.valueOf(s.getPoids());
+        FontMetrics fm = g.getFontMetrics();
+
+        int w = fm.stringWidth(poids);
+        int h = fm.getAscent();
+
+        g.setColor(new Color(255, 213, 0));
+        g.drawString(poids, (int) (tx - w / 2.0), (int) (ty + h / 2.0));
+    }
+
+    public void dessinerArcs(Graphics2D g, List<PointID> cs) {
+        for (Arc<?> c : graphe.getArcs()) {
+            dessinerArc(g, c, cs);
+        }
+    }
+
+    private void dessinerFleche(Graphics2D g, double endX, double endY, double angle) {
+        int taille = 10;
+        double ouverture = Math.PI / 6;
+
+        int x1 = (int) (endX - taille * Math.cos(angle - ouverture));
+        int y1 = (int) (endY - taille * Math.sin(angle - ouverture));
+        int x2 = (int) (endX - taille * Math.cos(angle + ouverture));
+        int y2 = (int) (endY - taille * Math.sin(angle + ouverture));
+
+        g.drawLine((int) endX, (int) endY, x1, y1);
+        g.drawLine((int) endX, (int) endY, x2, y2);
+    }
+
+    public Sommet<?> trouverSommetClique(int mouseX, int mouseY) {
+        if (graphe == null) return null;
+        int r = RAYON - 1;
+        for (int i = 0; i < graphe.getSommets().size() && i < positionsX.length; i++) {
+            double cx = positionsX[i] + r / 2.0;
+            double cy = positionsY[i] + r / 2.0;
+            double dist = Math.sqrt(Math.pow(mouseX - cx, 2) + Math.pow(mouseY - cy, 2));
+            if (dist <= r / 2.0) {
+                return graphe.getSommets().get(i);
+            }
+        }
+        return null;
+    }
+
+    public Arc<?> trouverArcClique(int mouseX, int mouseY) {
+        if (graphe == null) return null;
+        double rayon = (RAYON - 1) / 2.0;
+        double tolerance = 8.0;
+
+        for (Arc<?> arc : graphe.getArcs()) {
+            int idSrc  = arc.getSource().getId();
+            int idDest = arc.getDestination().getId();
+
+            int idxSrc  = trouverIndexParId(idSrc);
+            int idxDest = trouverIndexParId(idDest);
+            if (idxSrc == -1 || idxDest == -1) continue;
+
+            double x1 = positionsX[idxSrc]  + rayon;
+            double y1 = positionsY[idxSrc]  + rayon;
+            double x2 = positionsX[idxDest] + rayon;
+            double y2 = positionsY[idxDest] + rayon;
+
+            double dist = distancePointSegment(mouseX, mouseY, x1, y1, x2, y2);
+            if (dist <= tolerance) {
+                return arc;
+            }
+        }
+        return null;
+    }
+
+    public void notifierModification() {
+        repaint();
+        firePropertyChange("grapheModifie", null, graphe);
+    }
+    
+    private double distancePointSegment(double px, double py,
+                                        double x1, double y1,
+                                        double x2, double y2) {
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double lenSq = dx * dx + dy * dy;
+        if (lenSq == 0) {
+            return Math.hypot(px - x1, py - y1);
+        }
+        double t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
+        t = Math.max(0, Math.min(1, t));
+        double projX = x1 + t * dx;
+        double projY = y1 + t * dy;
+        return Math.hypot(px - projX, py - projY);
+    }
+    
+    public void deplacerSommet(Sommet<?> sommet, int mouseX, int mouseY) {
+        int index = trouverIndexParId(sommet.getId());
+        if (index == -1) return;
+
+        positionsX[index] = mouseX - RAYON / 2;
+        positionsY[index] = mouseY - RAYON / 2;
+
+        positionsX[index] = Math.max(0, Math.min(getWidth()  - RAYON, positionsX[index]));
+        positionsY[index] = Math.max(0, Math.min(getHeight() - RAYON, positionsY[index]));
+    }
+
+    public void placerSommetsSurGrilleAleatoire() {
+	    if (graphe == null) return;
+	    int nbSommets = graphe.getSommets().size();
+	    int largeur = getWidth()  > 0 ? getWidth()  : 500;
+	    int hauteur = getHeight() > 0 ? getHeight() : 400;
 	
-	public void dessinerPoids(Graphics2D g, Arc<?> s, double x1, double y1, double x2, double y2) {
-
-		if (!graphe.isEstPondere())
-			return;
-
-		double mx = (x1 + x2) / 2;
-		double my = (y1 + y2) / 2;
-
-		double dx = x2 - x1;
-		double dy = y2 - y1;
-
-		double length = Math.sqrt(dx * dx + dy * dy);
-		if (length == 0)
-			return;
-
-		dx /= length;		
-		dy /= length;
-		dy += 1;
-
-		double offset = 5;
-		double px = -dy * offset;
-		double py = dx * offset;
-
-		double tx = mx + px;
-		double ty = my + py;
-
-		String poids = String.valueOf(s.getPoids());
-		FontMetrics fm = g.getFontMetrics();
-
-		int w = fm.stringWidth(poids);
-		int h = fm.getAscent();
-		
-		g.setColor(Color.RED);
-		g.drawString(poids, (int) (tx - w / 2.0), (int) (ty + h / 2.0));
-	}
-	
-	public void dessinerArcs(Graphics2D g, List<PointID> cs) {
-		for (Arc<?> c : graphe.getArcs()) {
-			dessinerArc(g, c, cs);
-		}
-	}
-
-	private void dessinerFleche(Graphics2D g, double endX, double endY, double angle) {
-	    int taille = 10; 
-	    double ouverture = Math.PI / 6; 
-
-	    int x1 = (int) (endX - taille * Math.cos(angle - ouverture));
-	    int y1 = (int) (endY - taille * Math.sin(angle - ouverture));
-
-	    int x2 = (int) (endX - taille * Math.cos(angle + ouverture));
-	    int y2 = (int) (endY - taille * Math.sin(angle + ouverture));
-
-	    g.drawLine((int) endX, (int) endY, x1, y1);
-	    g.drawLine((int) endX, (int) endY, x2, y2);
-	}
-	
-
-	private void placerSommetsSurGrilleAleatoire() {
-	    int n = positionsSommets.length;
-	    int sommetsRestants = n;
-
-	    for (int[] ligne : positionsSommets)
-	        Arrays.fill(ligne, 0);
-
-	    Random r = new Random();
-	    boolean lignePrecedenteComplete = false;
-
-	    for (int[] ligne : positionsSommets) {
-	        if (sommetsRestants == 0) break;
-
-	        if (lignePrecedenteComplete) {
-	            lignePrecedenteComplete = false;
-	            continue;
-	        }
-
-	        boolean placer = r.nextBoolean();
-	        if (placer) {
-	            int un = r.nextInt(n);
-	            ligne[un] = 1;
-	            sommetsRestants--;
-
-	            // 2ème sommet : seulement si il en reste et non adjacent
-	            if (sommetsRestants > 0 && r.nextBoolean()) {
-	                int deux;
-	                int tentatives = 0;
-	                do {
-	                    deux = r.nextInt(n);
-	                    tentatives++;
-	                } while ((deux == un || Math.abs(deux - un) == 1) && tentatives < 100);
-
-	                if (Math.abs(deux - un) > 1) { // placement valide
-	                    ligne[deux] = 1;
-	                    sommetsRestants--;
-	                    lignePrecedenteComplete = true;
-	                }
-	            }
-	        }
+	    if (positionsX.length != nbSommets) {
+	        positionsX = new int[nbSommets];
+	        positionsY = new int[nbSommets];
 	    }
-
-	    // Fallback
-	    while (sommetsRestants != 0) {
-	        int rx = r.nextInt(n);
-	        int ry = r.nextInt(n);
-
-	        if (positionsSommets[rx][ry] == 0) {
-	            positionsSommets[rx][ry] = 1;
-	            sommetsRestants--;
-	        }
+	
+	    Random rand = new Random();
+	    for (int i = 0; i < nbSommets; i++) {
+	        positionsX[i] = rand.nextInt(Math.max(1, largeur  - RAYON));
+	        positionsY[i] = rand.nextInt(Math.max(1, hauteur - RAYON));
 	    }
 	}
+
+	public int trouverIndexParId(int id) { // private → public
+        for (int i = 0; i < graphe.getSommets().size(); i++) {
+            if (graphe.getSommets().get(i).getId() == id) return i;
+        }
+        return -1;
+    }
 
 	private void placerSommetsSurGrilleStatique() {
-	    int n = positionsSommets.length;
+        if (graphe == null) return;
+        int nbSommets = graphe.getSommets().size();
+        if (nbSommets == 0) {
+            positionsX = new int[0];
+            positionsY = new int[0];
+            return;
+        }
 
-	    for (int[] ligne : positionsSommets)
-	        java.util.Arrays.fill(ligne, 0);
+        int largeur = getWidth()  > 0 ? getWidth()  : 500;
+        int hauteur = getHeight() > 0 ? getHeight() : 400;
+        int tailleDispo = Math.min(largeur, hauteur);
 
-	    double cx = (n - 1) / 2.0; 
-	    double cy = (n - 1) / 2.0;
-	    double rayon = (n - 1) / 2.0 - 0.5;
+        double rayonCercle = (tailleDispo / 2.0) * 0.85;
 
-	    int nbSommets = graphe.getSommets().size();
+        double perimetre = 2 * Math.PI * rayonCercle;
+        int rayonMax = (int) (perimetre / (nbSommets * 2.2));
+        RAYON = Math.max(20, Math.min(55, rayonMax));
 
-	    for (int i = 0; i < nbSommets; i++) {
-	        double angle = 2 * Math.PI * i / nbSommets - Math.PI / 2; // commence en haut
-	        int col = (int) Math.round(cx + rayon * Math.cos(angle));
-	        int ligne = (int) Math.round(cy + rayon * Math.sin(angle));
+        double cx = largeur / 2.0;
+        double cy = hauteur / 2.0;
 
-	        col  = Math.max(0, Math.min(n - 1, col));
-	        ligne = Math.max(0, Math.min(n - 1, ligne));
+        positionsX = new int[nbSommets];
+        positionsY = new int[nbSommets];
 
-	        positionsSommets[ligne][col] = 1;
-	    }
-	}
-	
-	
-	public static void affiche2D(int[][] tab) {
-		for (int[] ligne : tab) {
-			for (int val : ligne) {
-				System.out.print(val + " ");
-			}
-			System.out.println();
-		}
-	}
+        for (int i = 0; i < nbSommets; i++) {
+            double angle = 2 * Math.PI * i / nbSommets - Math.PI / 2;
+            positionsX[i] = (int) Math.round(cx + rayonCercle * Math.cos(angle)) - RAYON / 2;
+            positionsY[i] = (int) Math.round(cy + rayonCercle * Math.sin(angle)) - RAYON / 2;
+        }
+    }
+   
+    /** Ajoute une position pour un nouveau sommet ajouté graphiquement. */
+    public void ajouterPositionSommet(int x, int y) {
+        // Centrer le sommet sur le point cliqué
+        int xPlace = x - RAYON / 2;
+        int yPlace = y - RAYON / 2;
 
-	public static void main(String args[]) {
-		GrapheOrientePondere<Integer> graphe1 = new GrapheOrientePondere<Integer>(8);
+        positionsX = Arrays.copyOf(positionsX, positionsX.length + 1);
+        positionsY = Arrays.copyOf(positionsY, positionsY.length + 1);
+        positionsX[positionsX.length - 1] = xPlace;
+        positionsY[positionsY.length - 1] = yPlace;
+    }
 
-		for (int i = 1; i <= 8 ; i++) {
-			graphe1.ajouterSommet(i);			
-		}
+   
+    public void supprimerPositionSommet(int idSupprime) {
+  
+        int indexASupprimer = idSupprime - 1;
+        if (indexASupprimer < 0 || indexASupprimer >= positionsX.length) return;
 
-		/*graphe1.ajouterArc("Mulhouse1", "Mulhouse2", 1);
-		graphe1.ajouterArc("Mulhouse1", "Mulhouse5", 1);
-		graphe1.ajouterArc("Mulhouse1", "Mulhouse6", 1);*/
-		
-		graphe1.ajouterArc(1, 2, 6);
-		graphe1.ajouterArc(1, 6, 7);
-		graphe1.ajouterArc(1, 3, 7);
-		graphe1.ajouterArc(5, 4, 7);
+        int n = positionsX.length;
+        int[] newX = new int[n - 1];
+        int[] newY = new int[n - 1];
+        int k = 0;
+        for (int i = 0; i < n; i++) {
+            if (i == indexASupprimer) continue;
+            newX[k] = positionsX[i];
+            newY[k] = positionsY[i];
+            k++;
+        }
+        positionsX = newX;
+        positionsY = newY;
+    }
 
-		graphe1.ajouterArc(2, 4, 8);
-		graphe1.ajouterArc(2, 3, 8);
-		graphe1.ajouterArc(3, 4, 8);
+    /** Réinitialise complètement les positions (graphe vidé). */
+    public void reinitialiserPositions() {
+        positionsX = new int[0];
+        positionsY = new int[0];
+    }
 
-		graphe1.ajouterArc(4, 7, 0);		
+    public Graphe<?> getGraphe() {
+        return graphe;
+    }
 
+    public void setGraphe(Graphe<?> grapheCourant) {
+        this.graphe = grapheCourant;
+        if (grapheCourant != null) {
+            int nbSom = grapheCourant.getSommets().size();
+            positionsX = new int[nbSom];
+            positionsY = new int[nbSom];
+            placerSommetsSurGrilleStatique();
+        } else {
+            positionsX = new int[0];
+            positionsY = new int[0];
+        }
+        sommetSourceSelectionne = null;
+    }
 
-		VueGraphe vg = new VueGraphe(graphe1);
+    public void setSommetSourceSelectionne(Sommet<?> s) {
+        this.sommetSourceSelectionne = s;
+    }
 
-		//affiche2D(vg.positionsSommets);
-		
-		Button b = new Button("Replacer");
-		b.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				vg.placerSommetsSurGrilleAleatoire();
-				vg.repaint();
-			} 
-		});
+    public Sommet<?> getSommetSourceSelectionne() {
+        return sommetSourceSelectionne;
+    }
 
-		JFrame frame = new JFrame();
-		frame.setSize(600, 600);
+    public void centrerVue() {
+        placerSommetsSurGrilleStatique();
+        repaint();
+    }
 
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setLayout(new BorderLayout());
-		frame.add(vg, BorderLayout.CENTER);
-		frame.add(b, BorderLayout.SOUTH);
+    public void mettreAJour() {
+        repaint();
+    }
 
-		frame.setVisible(true);
-	}
+    private static class Point {
+        private double x, y;
+        public Point(double x, double y) { this.x = x; this.y = y; }
+        public double getX() { return x; }
+        public double getY() { return y; }
+        @Override public int hashCode() { return Objects.hash(x, y); }
+        @Override public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof Point)) return false;
+            Point other = (Point) obj;
+            return Double.doubleToLongBits(x) == Double.doubleToLongBits(other.x)
+                && Double.doubleToLongBits(y) == Double.doubleToLongBits(other.y);
+        }
+    }
 
-	private static class Point {
-		private double x, y;
-
-		public Point(double x, double y) {
-			super();
-			this.x = x;
-			this.y = y;
-		}
-
-		public double getX() {
-			return x;
-		}
-
-		public void setX(double x) {
-			this.x = x;
-		}
-
-		public double getY() {
-			return y;
-		}
-
-		public void setY(double y) {
-			this.y = y;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(x, y);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Point other = (Point) obj;
-			return Double.doubleToLongBits(x) == Double.doubleToLongBits(other.x)
-					&& Double.doubleToLongBits(y) == Double.doubleToLongBits(other.y);
-		}
-	}
-
-	private static class PointID {
-		private Point p;
-		private int id;
-
-		public PointID(Point p, int id) {
-			this.p = p;
-			this.id = id;
-		}
-
-		public Point getP() {
-			return p;
-		}
-
-		public void setP(Point p) {
-			this.p = p;
-		}
-
-		public int getId() {
-			return id;
-		}
-
-		public void setId(int id) {
-			this.id = id;
-		}
-
-		@Override
-		public int hashCode() {
-			return Objects.hash(id);
-		}
-
-		public static List<Integer> listID(List<PointID> cs) {
-			List<Integer> ids = new ArrayList<Integer>();
-			for (PointID c : cs) {
-				ids.add(c.getId());
-			}
-			return ids;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			PointID other = (PointID) obj;
-			return id == other.id;
-		}
-
-	}
+    private static class PointID {
+        private Point p;
+        private int id;
+        public PointID(Point p, int id) { this.p = p; this.id = id; }
+        public Point getP() { return p; }
+        public int   getId() { return id; }
+        @Override public int hashCode() { return Objects.hash(id); }
+        @Override public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (!(obj instanceof PointID)) return false;
+            return id == ((PointID) obj).id;
+        }
+    }
 }
-
