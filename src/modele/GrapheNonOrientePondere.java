@@ -1,16 +1,33 @@
 package modele;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 
 public class GrapheNonOrientePondere<T> extends GrapheNonOriente<T> implements IPondere {
 
-	public GrapheNonOrientePondere(int nbSommets) {
-		super(nbSommets);
-		this.estPondere = true;
-	}
-
 	private double[][] matricePoids;
 
+	
+	public GrapheNonOrientePondere(int nbSommets) {
+		super(nbSommets);
+		matricePoids = new double[nbSommets+1][nbSommets+1];
+		this.estPondere = true;
+		for(double[]ligne : matricePoids) {
+			for(int i = 0; i < ligne.length; i++)
+				ligne[i] = MAX_POIDS;
+		}
+	}
+	
+	public GrapheNonOrientePondere() {
+		this(100);
+	}
+
+	
 	@Override
 	public void afficher() {
 
@@ -90,7 +107,7 @@ public class GrapheNonOrientePondere<T> extends GrapheNonOriente<T> implements I
 	    prem[i] = prem[j];
 	    
 	    nbElem[i] += nbElem[j];
-	}
+	}		
 	
 	private void trierArcs() {
 	    this.arcs.sort(new Comparator<Arc<T>>() {
@@ -100,4 +117,93 @@ public class GrapheNonOrientePondere<T> extends GrapheNonOriente<T> implements I
 	        }
 	    });
 	}
+	
+	public void charger(String fichier) {
+
+		super.charger(fichier);
+		int n = getOrdre();
+
+		Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", fichier);
+		try {
+			List<String> lignes = Files.readAllLines(path);
+
+			// Chercher "MATRICE DES POIDS" sans break
+			int debutPoids = -1;
+			for (int i = 0; i < lignes.size(); i++) {
+				if (lignes.get(i).equalsIgnoreCase("MATRICE DES POIDS") && debutPoids == -1) {
+					debutPoids = i + 1;
+				}
+			}
+
+			matricePoids = new double[n + 1][n + 1];
+
+			for (int i = 0; i <= n; i++) {
+				String ligne = lignes.get(debutPoids + i);
+				String[] vals = ligne.split(";");
+				for (int j = 0; j < vals.length && j <= n; j++) {
+					this.matricePoids[i][j] = Double.parseDouble(vals[j]);
+				}
+			}
+
+			for (Arc<?> arc : this.arcs) {
+				arc.setPoids(this.matricePoids[arc.getSource().getId()][arc.getDestination().getId()]);
+			}
+
+		} catch (java.io.IOException e) {
+			throw new IllegalArgumentException("Le chargement a échoué : " + e.getMessage());
+		}
+	}
+	
+	
+	public void setMatricePoids(double[][] matricePoids) {
+		this.matricePoids = matricePoids;
+	}
+
+	@Override
+	public void sauvegarder(String fichier) {
+	    // Initialiser la matrice des poids depuis les arcs
+	    int n = this.sommets.size();
+	    this.matricePoids = new double[n + 1][n + 1];
+	    for (Arc<T> arc : this.arcs) {
+	        int i = arc.getSource().getId();
+	        int j = arc.getDestination().getId();
+	        this.matricePoids[i][j] = arc.getPoids();
+	        this.matricePoids[j][i] = arc.getPoids();
+	    }
+
+	    super.sauvegarder(fichier);
+
+	    Path path = Path.of(System.getProperty("user.dir"), "src", "ressources", fichier);
+	    try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toString(), true))) { // true = append
+	        writer.append("MATRICE DES POIDS\n");
+	        for (double[] ligne : this.matricePoids) {
+	            for (double poids : ligne) writer.append(poids + ";");
+	            writer.append("\n");
+	        }
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	@Override
+	public String toString() {
+	    StringBuilder sb = new StringBuilder();
+	    sb.append("GrapheNonOrientePondere (").append(sommets.size()).append(" sommets, ")
+	      .append(arcs.size()).append(" arêtes)\n");
+
+	    for (Arc<T> arc : arcs) {
+	        sb.append("  ")
+	          .append(arc.getSource().getDonnee())
+	          .append(" -- ")
+	          .append(arc.getDestination().getDonnee())
+	          .append(" [poids=")
+	          .append(arc.getPoids())
+	          .append("]\n");
+	    }
+	    return sb.toString();
+	}
+
+	
+	
+	
 }

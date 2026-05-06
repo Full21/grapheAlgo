@@ -27,10 +27,13 @@ public class Arc<T> {
     }
     public double    getPoids()       { 
     	return poids; 
-    }
+    }    
 
+    public void setPoids(double poids) {
+		this.poids = poids;
+	}
 
-    public Arc<T> inverse() {
+	public Arc<T> inverse() {
     	return new Arc<T>(this.destination, this.source, this.poids);
     }
 
